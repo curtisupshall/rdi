@@ -20,3 +20,7 @@ sudo apt install cmake
  0. Fetch submodules: `git submodule update --init`
  1. Install libdivsufsort: `make libdivsufsort`
 
+## 2. Running the Program
+```bash
+make rd-index
+```
