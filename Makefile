@@ -11,3 +11,6 @@ example:
 
 clean:
 	rm -rf extern/libdivsufsort/build bin/*.out
+
+rd-index:
+	codon run -plugin seq src/repeat.codon.py
