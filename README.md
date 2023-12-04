@@ -17,5 +17,6 @@ sudo apt install cmake
 ```
 
 ## 1. Setup
+ 0. Fetch submodules: `git submodule update --init`
  1. Install libdivsufsort: `make libdivsufsort`
 

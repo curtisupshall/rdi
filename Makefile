@@ -1,3 +1,5 @@
+
+
 libdivsufsort:
 	mkdir -p extern/libdivsufsort/build
 	cd extern/libdivsufsort/build && \
@@ -13,4 +15,7 @@ clean:
 	rm -rf extern/libdivsufsort/build bin/*.out
 
 rd-index:
-	codon run -plugin seq src/repeat.codon.py
+	~/.codon/bin/codon run -plugin seq src/repeat.codon.py
+
+home:
+	echo $(HOME)
