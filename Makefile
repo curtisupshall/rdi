@@ -1,3 +1,6 @@
+submodules:
+	git submodule update --init
+
 libdivsufsort:
 	mkdir -p extern/libdivsufsort/build
 	cd extern/libdivsufsort/build && \

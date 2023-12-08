@@ -18,7 +18,7 @@ sudo apt install cmake
 
 ## 1. Setup
  0. Clone the repo: `git clone git@github.com:curtisupshall/rd-index`
- 1. Fetch submodules: `git submodule update --init`
+ 1. Fetch submodules: `make submodules`
  2. Install libdivsufsort: `make libdivsufsort`
 
 ## 2. Running the Program
