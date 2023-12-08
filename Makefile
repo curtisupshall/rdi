@@ -20,5 +20,8 @@ clean:
 rd-index:
 	~/.codon/bin/codon run -plugin seq src/repeat.codon.py
 
+btree:
+	~/.codon/bin/codon run -plugin seq src/btree.codon.py
+
 home:
 	echo $(HOME)
