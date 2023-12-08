@@ -50,9 +50,7 @@ def main():
 
     print ('\n')
 
-
     # Create RD Index
-
     index = list()
 
     for i in range(1, n + 1):
@@ -71,15 +69,8 @@ def main():
                 if j <= i: # Violates condition #2
                     continue
 
-                
-
-                # if (LCP[i] >= k or k > LCP[i + 1]):
-                #     continue # Violates condition #3
-
-                p = int(SA[i])
-                
+                p = SA[i]
                 c = j - i
-
                 T = Text[p:p+k]
 
                 index.append( (p, k, c, T) )
