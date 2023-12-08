@@ -23,5 +23,20 @@ sudo apt install cmake
 
 ## 2. Running the Program
 ```bash
-make rd-index
+make rdi
+```
+
+## 3. Usage (to be implemented)
+
+Index a string
+```bash
+rdi index mystring.txt
+```
+```bash
+cat mystring.txt > rdi index -o myindex.rdi
+```
+
+Reading from the index
+```bash
+rdi query -l 10 -r 6
 ```
