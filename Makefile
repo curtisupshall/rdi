@@ -17,11 +17,17 @@ example:
 clean:
 	rm -rf extern/libdivsufsort/build bin/*.out lib/*
 
+rd-index:
+	codon run -plugin seq src/rdi.codon.py
+
 rdi:
-	codon build -plugin seq src/repeat.codon.py -o bin/rdi
+	codon build -plugin seq src/rdi.codon.py -o bin/rdi
 
 btree:
 	~/.codon/bin/codon run -plugin seq src/btree.codon.py
 
 home:
 	echo $(HOME)
+
+PHONY:
+	rdi

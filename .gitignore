@@ -3,3 +3,4 @@ bin/*
 include/*
 lib/*
 !.gitkeep
+data/chr22.fa

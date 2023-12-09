@@ -28,7 +28,7 @@ def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
 
 
 def main():
-    Text = "CTGATAGCTATAGCTACGCC"
+    Text = "CAGATTTCAG_TACAGACAGA_"
     n = len(Text)
     SA_ptr = Ptr[Int[32]](n)
     
