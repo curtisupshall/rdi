@@ -24,6 +24,10 @@ class TreeNode[T]:
                 self.right = TreeNode[T](key, value)
             else:
                 self.right.child(key, value)
+    
+    def serialize(self):
+        with open(filename, 'w') as file:
+            json.dump(serialized_tree, file)
 
     
 node = TreeNode[str](10, 'hello')
