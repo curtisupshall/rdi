@@ -1,7 +1,7 @@
 # rd-index
 
 ## 0. Prerequisites
- - [Codon](https://docs.exaloop.io/codon/) and [Seq](https://docs.seq-lang.org/):
+ - [Codon](https://docs.exaloop.io/codon/) **(with Python interoperability enabled!)** and [Seq](https://docs.seq-lang.org/):
 
 ```bash
 bash -c "$(curl -fsSL https://exaloop.io/install.sh)"
