@@ -1,6 +1,7 @@
 from bio import *
 import sys
 import datetime
+from python import json, argparse
 
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
