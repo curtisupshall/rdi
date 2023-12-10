@@ -1,44 +1,32 @@
-class BTreeNode[T]:
-    _value: T
-    _left: Optional[object] = None
-    _right: Optional[object] = None
+class TreeNode[T]:
+    key: int
+    value: T
+    left: Optional[TreeNode[T]] = None
+    right: Optional[TreeNode[T]] = None
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, key: int, value: T):
+        self.key = key
+        self.value = value
+        self.left = None
+        self.right = None
 
     def __repr__(self):
-        return self._value
+        return f'{self.key} => {self.value}'
     
-    def addChild(self, node: object):
-        if value < self._value:
-            if self._left is None:
-                self._left = node
+    def child(self, key, value):
+        if key < self.key:
+            if self.left is None:
+                self.left = TreeNode[T](key, value)
+            else:
+                self.left.child(key, value)
+        else:
+            if self.right is None:
+                self.right = TreeNode[T](key, value)
+            else:
+                self.right.child(key, value)
 
-class BTree[T]:
-    _root: Optional[BTreeNode[T]] = None
-
-    def __init__(self):
-        # self._root = root
-        return
     
-    def root(self):
-        return self._root
-    
-    def add(self, value: T):
-        node = BTreeNode[T](value)
+node = TreeNode[str](10, 'hello')
+node.child(2, 'world')
 
-        if self._root is None:
-            self._root = node
-
-    def toJson():
-        return
-    
-    def fromJson():
-        return
-
-        
-
-tree = BTree[str]()
-tree.add('hello')
-
-print(tree.root())
+print(node)
