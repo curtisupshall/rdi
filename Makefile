@@ -18,13 +18,13 @@ clean:
 	rm -rf extern/libdivsufsort/build bin/*.out lib/*
 
 rdi:
-	codon build -plugin seq src/rdi.codon.py -o bin/rdi
+	codon build -plugin seq src/rdi.codon -o bin/rdi
 
 run:
 	./bin/rdi
 
 btree:
-	~/.codon/bin/codon run -plugin seq src/btree.codon.py
+	~/.codon/bin/codon run -plugin seq src/btree.codon
 
 home:
 	echo $(HOME)

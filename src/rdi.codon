@@ -54,15 +54,16 @@ def build_index(Text: str):
         SA.append(int(SA_ptr[i]))
 
     LCP = build_lcp_array(Text, n, SA_ptr)
+
     Rdi = Btree()
 
     index = list() # TODO remove
 
     # Set of unique string lengths
-    ls: Set[int] = set()
+    # ls: Set[int] = set() # TODO remove
     
     # Set of unique string occurrences
-    rs = Set[int]()
+    # rs = Set[int]() # TODO remove
 
     for i in range(1, n + 1):
         if (LCP[i] < LCP[i + 1]):
@@ -83,37 +84,30 @@ def build_index(Text: str):
                 r: int = j_min - i       # Number of occurrences
                 T: str = Text[p:p+k]     # Substring in question
 
-                # Base case: L and R have already been seen
-                if l in ls and r in rs:
-                    print(l)
-                    print(r)
-                    print(ls)
-                    print(rs)
-                    # print(Rdi)
-                    Rdi.find(l).find(r).append(p)
-                
-                elif l in ls and r not in rs:
-                    rs.add(r)
-                    Rdi.find(l).insert(r, List[int]())
-
+                ltree = Rdi.find(l)
+                if ltree is None:
+                    Rdi.insert(l, Btree(r, List[int]([p])))
                 else:
-                    ls.add(l)
-                    rs.add(r)
-                    tree = Btree()
-                    tree.insert(r, List[int]())
-                    Rdi.insert(l, tree)
+                    rlist = ltree.find(r)
+                    if rlist is None:
+                        ltree.insert(r, List[int]([p]))
+                    else:
+                        rlist.append(p)
+                    
                 index.append( (p, l, r, T) )
     
-    return index
+    return Rdi
 
 def main():
     start = datetime.datetime.now()
-    for ref_genome in FASTA('data/test.fa', fai=False, validate=False, gzip=False):
+    for ref_genome in FASTA('data/copy.fa', fai=False, validate=False, gzip=False):
         Text = str(ref_genome.seq).upper()
-        index = build_index(Text)
+        Rdi = build_index(Text)
+
+        print(Rdi.root)
         
-        for i in range(len(index)):
-            print(index[i])
+        # for i in range(len(index)):
+        #     print(index[i])
     
     return
 

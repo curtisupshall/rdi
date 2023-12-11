@@ -13,7 +13,7 @@ class TreeNode[T]:
         self.right = None
 
     def __repr__(self):
-        return f'{self.key} => {self.value}'
+        return f'<{self.key}, {self.value}, {self.left}, {self.right}>'
     
     def child(self, key, value):
         if key < self.key:
@@ -37,12 +37,6 @@ class TreeNode[T]:
         
         return None
 
-    def serialize(self) -> str:
-        left = self.left.serialize() if self.left else 'null'
-        right = self.right.serialize() if self.right else 'null'
-
-        return f'[{self.key}, {json.dumps(self.value)}, {left}, {right}]'
-
     @staticmethod
     def deserialize(body):
         return
@@ -52,9 +46,12 @@ class Btree[T]:
 
     def __init__(self):
         self.root = None
+    
+    def __init__(self, key: int, value: T):
+        self.root = TreeNode[T](key, value)
 
     def __repr__(self):
-        return None if self.root is None else self.root.serialize()
+        return None if self.root is None else str(self.root)
     
     def insert(self, key: int, value: T):
         if self.root is None:
@@ -66,19 +63,19 @@ class Btree[T]:
         return None if self.root is None else self.root.find(key)
 
     
-# node = TreeNode[str](10, 'hello')
-# node.child(2, 'world')
+# Rdi: Btree[Btree[List[int]]] = Btree()
 
-# print(node.serialize())
+# tree: Btree[List[int]] = Btree()
+# tree.insert(1, List[int]([69]))
 
-# tree = Btree[List[int]]()
+# Rdi.insert(100, tree)
 
-# tree.insert(5, [5, 6])
-# tree.insert(3, [3, 4])
-# tree.insert(2, [2, 3])
-# tree.insert(9, [9, 10])
-# tree.insert(8, [8, 9])
+# # print(Rdi)
 
-# print(tree)
+# x = Rdi.find(100)
+# y = x.find(1)
+# print(x)
+# print(y)
+# y.append(70)
 
-# print(tree.find(2))
+# print(Rdi)
