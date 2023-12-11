@@ -17,8 +17,9 @@ def main():
     if parser.parse_known_args()[0].mode == 'index':
         parser.add_argument('filename', action='store_const', help="Path to the FASTA file")
         parser.add_argument('-o', '--output')
+
     elif parser.parse_known_args()[0].mode == 'query':
-        parser.add_argument('-i', '--input', help='Input filename for query mode')
+        parser.add_argument('-n', '--name', help='Name of the index')
 
     args = parser.parse_args()
 
