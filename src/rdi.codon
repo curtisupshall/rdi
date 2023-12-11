@@ -2,125 +2,27 @@ from bio import *
 import sys
 # import os
 import datetime
-from python import os, json, argparse, bz2
-
-from btree import Btree
-
-LIBDIVSUFSORT="lib/libdivsufsort.so.3"
-from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
-
-# Kasai Algorithm
-def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
-    lcp = List[int]([0] * (n))
-    rank = List[int]([0] * n)
-    k = 0
-
-    for i in range(n):
-        rank[int(suffix_array[i])] = i
-
-    for i in range(n):
-        if rank[i] == n - 1:
-            k = 0
-            continue
-        j = int(suffix_array[rank[i] + 1])
-        while i + k < n and j + k < n and s[i + k] == s[j + k]:
-            k += 1
-        lcp[rank[i]] = k
-        if k > 0:
-            k -= 1
-
-    return [0] + [0] + lcp + [0]
-
-def build_suffix_array(Text: str, n):
-    return
-
-def show_table(Text, n, SA, LCP):
-    print('---- Table 1 ----\n')
-    print('i \tSA[i]\tLCP[i]\tT[SA[i]..n]')
-    print
-    for i in range(n + 1):
-        sa_index = int(SA[i])
-        print(f'{i}\t{sa_index}\t{LCP[i]}\t{Text[sa_index:n]}$')
-
-def read_index(index):
-    Rdi = Btree()
-
-    for (p, l, r) in index:
-        ltree = Rdi.find(l)
-        if ltree is None:
-            Rdi.insert(l, Btree(r, List[int]([p])))
-        else:
-            rlist = ltree.find(r)
-            if rlist is None:
-                ltree.insert(r, List[int]([p]))
-            else:
-                rlist.append(p)
-
-    return Rdi
-
-def build_index(Text: str):
-    n = len(Text)
-    
-    SA_ptr = Ptr[Int[32]](n)
-    
-    divsufsort(Text.c_str(), SA_ptr, n)
-
-    SA = List[int]([n])
-
-    for i in range(n):
-        SA.append(int(SA_ptr[i]))
-
-    LCP = build_lcp_array(Text, n, SA_ptr)
-
-    Rdi = Dict[int, Dict[int, List[int]]]()
-
-    for i in range(1, n + 1):
-        if (LCP[i] < LCP[i + 1]):
-            for k in range(LCP[i] + 1, LCP[i + 1] + 1):            
-                # Calculate j > i is the minimum value such that LCP[j] < LCP[i + 1]
-                j_min = -1
-
-                for j in range(i + 1, n + 2):
-                    if (LCP[j] < k):
-                        j_min = j
-                        break
-
-                if j <= i:
-                    continue
-
-                p: int = SA[i]           # Position in the text
-                l: int = k               # Length of the string
-                r: int = j_min - i       # Number of occurrences
-                T: str = Text[p:p+k]     # Substring in question
-
-                if l not in Rdi:
-                    Rdi[l] = dict()
-                
-                if r not in Rdi[l]:
-                    Rdi[l][r] = list()
-                
-                Rdi[l][r].append(p)
-
-                # index.append( (p, l, r, T) )
-                # print((p, l, r))
-
-    return Rdi
-
-def write_dictionary(index, name):
-    if not os.path.exists('.rdi'):
-        os.makedirs('.rdi')
-    
-    num_files = len([f for f in os.listdir('.rdi') if os.path.isfile(os.path.join('.rdi', f))])
-
-    file_name = f'index{num_files}' if name is None else name
-
-    with bz2.BZ2File(f'.rdi/{file_name}.rdi', 'w') as f:
-        f.write(json.dumps(index).encode('utf-8'))
+from python import os, argparse
+from index import build_index, write_dictionary
 
 def main():
-    start = datetime.datetime.now()
 
-    file_path = 'data/test.fa'
+    parser = argparse.ArgumentParser(
+        prog='rdi',
+        description='Repeat Detection Index',
+        epilog='_____')
+    
+    parser.add_argument('mode', choices=['index', 'query'])
+
+    if parser.parse_known_args()[0].mode == 'index':
+        parser.add_argument('filename', action='store_const', help="Path to the FASTA file")
+        parser.add_argument('-o', '--output')
+    elif parser.parse_known_args()[0].mode == 'query':
+        parser.add_argument('-i', '--input', help='Input filename for query mode')
+
+    args = parser.parse_args()
+
+    file_path = args['filename']
     file_name = os.path.basename(file_path)
     index_name, _ = os.path.splitext(file_name)
 
@@ -128,7 +30,7 @@ def main():
     for ref_genome in FASTA(file_path, fai=False, validate=False, gzip=False):
         Text = str(ref_genome.seq).upper()
         index = build_index(Text)
-        
+
         write_dictionary(index, index_name)
     
     # for i in range(len(index)):
