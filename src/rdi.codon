@@ -41,6 +41,22 @@ def show_table(Text, n, SA, LCP):
         sa_index = int(SA[i])
         print(f'{i}\t{sa_index}\t{LCP[i]}\t{Text[sa_index:n]}$')
 
+def read_index(index):
+    Rdi = Btree()
+
+    for (p, l, r) in index:
+        ltree = Rdi.find(l)
+        if ltree is None:
+            Rdi.insert(l, Btree(r, List[int]([p])))
+        else:
+            rlist = ltree.find(r)
+            if rlist is None:
+                ltree.insert(r, List[int]([p]))
+            else:
+                rlist.append(p)
+
+    return Rdi
+
 def build_index(Text: str):
     n = len(Text)
     
@@ -55,15 +71,7 @@ def build_index(Text: str):
 
     LCP = build_lcp_array(Text, n, SA_ptr)
 
-    Rdi = Btree()
-
-    index = list() # TODO remove
-
-    # Set of unique string lengths
-    # ls: Set[int] = set() # TODO remove
-    
-    # Set of unique string occurrences
-    # rs = Set[int]() # TODO remove
+    index = list()
 
     for i in range(1, n + 1):
         if (LCP[i] < LCP[i + 1]):
@@ -83,32 +91,27 @@ def build_index(Text: str):
                 l: int = k               # Length of the string
                 r: int = j_min - i       # Number of occurrences
                 T: str = Text[p:p+k]     # Substring in question
-
-                ltree = Rdi.find(l)
-                if ltree is None:
-                    Rdi.insert(l, Btree(r, List[int]([p])))
-                else:
-                    rlist = ltree.find(r)
-                    if rlist is None:
-                        ltree.insert(r, List[int]([p]))
-                    else:
-                        rlist.append(p)
                     
                 index.append( (p, l, r, T) )
-    
-    return Rdi
+                print((p, l, r))
+
+    return index
 
 def main():
     start = datetime.datetime.now()
-    for ref_genome in FASTA('data/copy.fa', fai=False, validate=False, gzip=False):
-        Text = str(ref_genome.seq).upper()
-        Rdi = build_index(Text)
 
-        print(Rdi.root)
-        
-        # for i in range(len(index)):
-        #     print(index[i])
+    for ref_genome in FASTA('data/chr22.fa', fai=False, validate=False, gzip=False):
+    # Text = 'TGACATTGCGAGAAATAGTGCCCTCCTTTTGCCGTATTTCCAAGTTCTAGGGTAATTTTT'
+        Text = str(ref_genome.seq).upper()
+        index = build_index(Text)
+
+        # Rdi = read_index(index)
+
+        # print(Rdi)
     
+    # for i in range(len(index)):
+    #     print(index[i])
+
     return
 
 main()
