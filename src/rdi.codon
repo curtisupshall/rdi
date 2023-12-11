@@ -1,7 +1,8 @@
 from bio import *
 import sys
+# import os
 import datetime
-from python import json, argparse
+from python import os, json, argparse, bz2
 
 from btree import Btree
 
@@ -71,7 +72,7 @@ def build_index(Text: str):
 
     LCP = build_lcp_array(Text, n, SA_ptr)
 
-    index = list()
+    Rdi = Dict[int, Dict[int, List[int]]]()
 
     for i in range(1, n + 1):
         if (LCP[i] < LCP[i + 1]):
@@ -91,23 +92,44 @@ def build_index(Text: str):
                 l: int = k               # Length of the string
                 r: int = j_min - i       # Number of occurrences
                 T: str = Text[p:p+k]     # Substring in question
-                    
-                index.append( (p, l, r, T) )
-                print((p, l, r))
 
-    return index
+                if l not in Rdi:
+                    Rdi[l] = dict()
+                
+                if r not in Rdi[l]:
+                    Rdi[l][r] = list()
+                
+                Rdi[l][r].append(p)
+
+                # index.append( (p, l, r, T) )
+                # print((p, l, r))
+
+    return Rdi
+
+def write_dictionary(index, name):
+    if not os.path.exists('.rdi'):
+        os.makedirs('.rdi')
+    
+    num_files = len([f for f in os.listdir('.rdi') if os.path.isfile(os.path.join('.rdi', f))])
+
+    file_name = f'index{num_files}' if name is None else name
+
+    with bz2.BZ2File(f'.rdi/{file_name}.rdi', 'w') as f:
+        f.write(json.dumps(index).encode('utf-8'))
 
 def main():
     start = datetime.datetime.now()
 
-    for ref_genome in FASTA('data/chr22.fa', fai=False, validate=False, gzip=False):
+    file_path = 'data/test.fa'
+    file_name = os.path.basename(file_path)
+    index_name, _ = os.path.splitext(file_name)
+
     # Text = 'TGACATTGCGAGAAATAGTGCCCTCCTTTTGCCGTATTTCCAAGTTCTAGGGTAATTTTT'
+    for ref_genome in FASTA(file_path, fai=False, validate=False, gzip=False):
         Text = str(ref_genome.seq).upper()
         index = build_index(Text)
-
-        # Rdi = read_index(index)
-
-        # print(Rdi)
+        
+        write_dictionary(index, index_name)
     
     # for i in range(len(index)):
     #     print(index[i])
