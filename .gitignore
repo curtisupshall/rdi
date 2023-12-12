@@ -8,4 +8,5 @@ lib/*
 !.gitkeep
 data/chr22.fa
 
-.rdi
+**/*.rdi
+.rdilist

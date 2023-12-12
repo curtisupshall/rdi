@@ -8,10 +8,9 @@ from python import os, json, argparse, bz2
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
-def write_dictionary(index, file_path):
-    index_path = f'{file_path}.rdi'
-    with open('.rdi', 'a') as f:
-        f.write(file_path)
+def write_dictionary(index, index_path):
+    with open('.rdilist', 'a') as f:
+        f.write(f'{index_path}\n')
 
     with bz2.BZ2File(index_path, 'w') as f:
         f.write(json.dumps(index).encode('utf-8'))

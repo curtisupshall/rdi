@@ -9,7 +9,8 @@ from btree import Btree
 
 def main():
 
-    print(sys.argv)
+    system_args = sys.argv[1:]
+    # print(system_args)
 
     parser = argparse.ArgumentParser(
         prog='rdi',
@@ -19,28 +20,38 @@ def main():
     parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index, or query')
     parser.add_argument('file_path', help='Path to the FASTA file')
 
-    args = parser.parse_args(sys.argv)
+    args = parser.parse_args(system_args)
     file_path = args.file_path
     mode = args.mode
 
     index_name = f'{file_path}.rdi'
 
-    if mode == 'index':
-        for read in FASTA(file_path, fai=False, validate=False, gzip=False):
-            Text = str(read.seq).upper()
-            index = build_index(Text)
+    Text = ''
+    for read in FASTA(file_path, fai=False, validate=False, gzip=False):
+        Text = str(read.seq).upper()
+        break
 
-            write_dictionary(index, index_name)
+    if mode == 'index':
+        index = build_index(Text)
+        write_dictionary(index, index_name)
 
     elif mode == 'query':
         # Build btree
         Rdi = load_index(index_name)
-        print("Enter a query on L and R (e.g., 10 30)")
+        print("Enter a query on L and R (e.g., 30 10)")
         print("Type quit() to exit.")
 
         query = ''
         # while query != 'quit()':
         #     query = input('Query: ')
+
+        l = 70
+        r = 3
+        rs = Rdi.find(l)
+        ps = rs.find(r) if rs else List[int]()
+
+        for p in ps:
+            print(Text[p:p+l])
 
         
         print('Goodbye')

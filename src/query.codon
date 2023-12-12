@@ -2,23 +2,23 @@ from python import json, bz2
 from btree import Btree
 
 def load_index(index_path) -> Btree[Btree[List[int]]]:
-    dictionary = Dict[int, Dict[int, List[int]]]()
+    # dictionary = Dict[int, Dict[int, List[int]]]()
     Rdi = Btree[Btree[List[int]]]()
 
     with bz2.BZ2File(index_path, 'rb') as f:
         dictionary = json.loads(f.read().decode('utf-8'))
 
-    for l, rs in dictionary.items():
-        for r, ps in rs.items():
-            for p in ps:
-                ltree = Rdi.find(l)
-                if ltree is None:
-                    Rdi.insert(l, Btree(r, List[int]([p])))
-                else:
-                    rlist = ltree.find(r)
-                    if rlist is None:
-                        ltree.insert(r, List[int]([p]))
+        for l, rs in dictionary.items():
+            for r, ps in rs.items():
+                for p in ps:
+                    ltree = Rdi.find(int(l))
+                    if ltree is None:
+                        Rdi.insert(int(l), Btree(int(r), List[int]([int(p)])))
                     else:
-                        rlist.append(p)
+                        rlist = ltree.find(int(r))
+                        if rlist is None:
+                            ltree.insert(int(r), List[int]([int(p)]))
+                        else:
+                            rlist.append(p)
     
     return Rdi
