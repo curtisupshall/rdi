@@ -63,9 +63,11 @@ queries against the index.
 |`-r`, `--repeats`|`int`|Repeats
 |`-l`, `--length`|`int`|Kmer length
 
-## 3. The Data Structure
-
-## 4. Future Work
+## 3. Future Work
  - Parallelization
- - Pipelining
- - TBD.
+ - Pipelining:
+```bash
+cat mysequence.fa | rdi index
+echo "30 10" | rdi query
+```
+ - REPL
