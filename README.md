@@ -1,4 +1,4 @@
-'''bash
+```bash
   TTTTTT                 CCAA   TTTT
 AGAGGAGAGACC             CGCG   AACC
 AAAA    CCGGCC           CCGG 
@@ -9,7 +9,7 @@ AAAA    AAAA    AAAA     CGCG   ACAC
 AAAA    TTGGTT  CCGG     CCGG   AACC
 AAAA      AAAA  TTGGCC CCGGGG   ACAC
 AAAA      CCGGTT  CCGGGGGCCGG   AACC
-'''
+```
 
 # rdi
 Repeat Detection Index is an index for finding repeated substrings.
