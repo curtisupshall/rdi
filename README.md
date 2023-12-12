@@ -71,3 +71,6 @@ cat mysequence.fa | rdi index
 echo "30 10" | rdi query
 ```
  - REPL
+
+## 4. References
+Many thanks to M. Oguzhan Kulekci of Indiana University, Bloomington, for providing the indexing algorithm used in this project, as well as pseudocode, examples, and general guidance.
