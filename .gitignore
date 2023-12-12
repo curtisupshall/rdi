@@ -2,6 +2,7 @@
 .vscode/launch.json
 
 bin/*
+*.o
 include/*
 lib/*
 !.gitkeep

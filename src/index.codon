@@ -8,15 +8,12 @@ from python import os, json, argparse, bz2
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
-def write_dictionary(index, name):
-    if not os.path.exists('.rdi'):
-        os.makedirs('.rdi')
-    
-    num_files = len([f for f in os.listdir('.rdi') if os.path.isfile(os.path.join('.rdi', f))])
+def write_dictionary(index, file_path):
+    index_path = f'{file_path}.rdi'
+    with open('.rdi', 'a') as f:
+        f.write(file_path)
 
-    file_name = f'index{num_files}' if name is None else name
-
-    with bz2.BZ2File(f'.rdi/{file_name}.rdi', 'w') as f:
+    with bz2.BZ2File(index_path, 'w') as f:
         f.write(json.dumps(index).encode('utf-8'))
 
 # Kasai Algorithm
@@ -47,7 +44,6 @@ def build_suffix_array(Text: str, n):
     
     return SA
 
-
 def build_index(Text: str):
     n = len(Text)
     SA = build_suffix_array(Text, n)
@@ -70,10 +66,9 @@ def build_index(Text: str):
                 if j <= i:
                     continue
 
-                p: int = int(SA[i])           # Position in the text
+                p: int = int(SA[i])      # Position in the text
                 l: int = k               # Length of the string
                 r: int = j_min - i       # Number of occurrences
-                T: str = Text[p:p+k]     # Substring in question
 
                 if l not in dictionary:
                     dictionary[l] = dict()
@@ -82,9 +77,6 @@ def build_index(Text: str):
                     dictionary[l][r] = list()
                 
                 dictionary[l][r].append(p)
-
-                # index.append( (p, l, r, T) )
-                # print((p, l, r))
 
     return dictionary
 

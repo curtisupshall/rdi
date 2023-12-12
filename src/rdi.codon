@@ -4,6 +4,8 @@ import sys
 import datetime
 from python import os, argparse
 from index import build_index, write_dictionary
+from query import load_index
+from btree import Btree
 
 def main():
 
@@ -15,31 +17,38 @@ def main():
         )
     
     parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index, or query')
-
-    if parser.parse_known_args()[0].mode == 'index':
-        parser.add_argument('filename', action='store_const', help="Path to the FASTA file")
-        parser.add_argument('-o', '--output')
-
-    elif parser.parse_known_args()[0].mode == 'query':
-        parser.add_argument('-n', '--name', help='Name of the index')
+    parser.add_argument('file_path', help='Path to the FASTA file')
 
     args = parser.parse_args(sys.argv)
+    file_path = args.file_path
+    mode = args.mode
 
-    file_path = args.filename
-    file_name = os.path.basename(file_path)
-    index_name, _ = os.path.splitext(file_name)
+    index_name = f'{file_path}.rdi'
+
+    if mode == 'index':
+        for read in FASTA(file_path, fai=False, validate=False, gzip=False):
+            Text = str(read.seq).upper()
+            index = build_index(Text)
+
+            write_dictionary(index, index_name)
+
+    elif mode == 'query':
+        # Build btree
+        Rdi = load_index(index_name)
+        print("Enter a query on L and R (e.g., 10 30)")
+        print("Type quit() to exit.")
+
+        query = ''
+        # while query != 'quit()':
+        #     query = input('Query: ')
+
+        
+        print('Goodbye')
+        return 0
 
 
-    # Text = 'TGACATTGCGAGAAATAGTGCCCTCCTTTTGCCGTATTTCCAAGTTCTAGGGTAATTTTT'
-    for ref_genome in FASTA(file_path, fai=False, validate=False, gzip=False):
-        Text = str(ref_genome.seq).upper()
-        index = build_index(Text)
 
-        write_dictionary(index, index_name)
-    
-    # for i in range(len(index)):
-    #     print(index[i])
 
-    return
+
 
 main()
