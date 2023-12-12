@@ -1,5 +1,3 @@
-from python import json
-
 class TreeNode[T]:
     key: int
     value: T
@@ -26,7 +24,7 @@ class TreeNode[T]:
                 self.right = TreeNode[T](key, value)
             else:
                 self.right.child(key, value)
-    
+
     def find(self, key) -> Optional[T]:
         if self.key == key:
             return self.value
@@ -34,12 +32,16 @@ class TreeNode[T]:
             return self.left.find(key)
         elif self.right is not None:
             return self.right.find(key)
-        
+
         return None
+    
+    def find(self, key, default: T) -> Optional[T]:
+        result = self.find(key)
+        return result if result is not None else default
 
     @staticmethod
     def deserialize(body):
-        return
+        raise Exception('Not implemented.')
     
 class Btree[T]:
     root: Optional[TreeNode[T]] = None
@@ -62,20 +64,5 @@ class Btree[T]:
     def find(self, key: int) -> Optional[T]:
         return None if self.root is None else self.root.find(key)
 
-    
-# Rdi: Btree[Btree[List[int]]] = Btree()
-
-# tree: Btree[List[int]] = Btree()
-# tree.insert(1, List[int]([69]))
-
-# Rdi.insert(100, tree)
-
-# # print(Rdi)
-
-# x = Rdi.find(100)
-# y = x.find(1)
-# print(x)
-# print(y)
-# y.append(70)
-
-# print(Rdi)
+    def find(self, key: int, default: T) -> Optional[T]:
+        return None if self.root is None else self.root.find(key, default)

@@ -19,5 +19,6 @@ rdi:
 btree:
 	codon run -plugin seq src/btree.codon
 
-PHONY:
-	submodules libdivsufsort clean rdi btree
+all: submodules libdivsufsort rdi
+
+.PHONY: submodules libdivsufsort clean rdi btree

@@ -1,6 +1,6 @@
 from bio import *
 import sys
-# import os
+
 import datetime
 from python import os, argparse
 from index import build_index, write_dictionary
@@ -8,9 +8,7 @@ from query import load_index
 from btree import Btree
 
 def main():
-
     system_args = sys.argv[1:]
-    # print(system_args)
 
     parser = argparse.ArgumentParser(
         prog='rdi',
@@ -18,48 +16,63 @@ def main():
         )
     
     parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index, or query')
-    parser.add_argument('file_path', help='Path to the FASTA file')
+    parser.add_argument('file_path', help='Path to your FASTA file')
 
-    args = parser.parse_args(system_args)
+    try:
+        if parser.parse_known_args(system_args)[0].mode == 'query':
+            parser.add_argument('-l', '--length', required=True, help='The length of kmers to query')
+            parser.add_argument('-r', '--occurrences', required=True, help='The number of occurrences to query')
+    except:
+        return 0
+
+    try:
+        args = parser.parse_args(system_args)
+    except:
+        return 0
+
     file_path = args.file_path
     mode = args.mode
 
-    index_name = f'{file_path}.rdi'
+    # Check if FASTA file actually exists
+    if not os.path.exists(file_path):
+        print(f'No file was found at {file_path}. Exiting.')
+        return 0
 
+    index_path = f'{file_path}.rdi'
     Text = ''
+
+    # Read the FASTA file
     for read in FASTA(file_path, fai=False, validate=False, gzip=False):
         Text = str(read.seq).upper()
         break
 
     if mode == 'index':
+        # Index the FASTA file
+        print(f'Writing "{index_path}"... ')
         index = build_index(Text)
-        write_dictionary(index, index_name)
+        write_dictionary(index, index_path)
+        print('\bDone.')
 
     elif mode == 'query':
+        # Check if the index has been build
+        if not os.path.exists(index_path):
+            print(f'No RDI index was found for {file_path}. You can build an index by running:\n\t./rdi index {file_path}\n')
+            return 0
+
         # Build btree
-        Rdi = load_index(index_name)
-        print("Enter a query on L and R (e.g., 30 10)")
-        print("Type quit() to exit.")
+        Rdi = load_index(index_path)
 
-        query = ''
-        # while query != 'quit()':
-        #     query = input('Query: ')
-
-        l = 70
-        r = 3
+        # Query the index
+        r = int(args.occurrences)
+        l = int(args.length)
         rs = Rdi.find(l)
-        ps = rs.find(r) if rs else List[int]()
+        ps = rs.find(r, List[int]([]))
 
-        for p in ps:
-            print(Text[p:p+l])
+        for p in (ps):
+            print(f'{Text[p:p+l]} @{p}')
 
-        
-        print('Goodbye')
+        # Print query statistics
+        print(f'\nFound {len(ps)} kmers of length {l} occurring {r} {"time" if r == 1 else "times"}')
         return 0
-
-
-
-
-
 
 main()

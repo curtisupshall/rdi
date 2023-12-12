@@ -1,7 +1,7 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 
-bin/*
+rdi
 *.o
 include/*
 lib/*
