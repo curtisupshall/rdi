@@ -7,12 +7,14 @@ from index import build_index, write_dictionary
 
 def main():
 
+    print(sys.argv)
+
     parser = argparse.ArgumentParser(
         prog='rdi',
         description='Repeat Detection Index',
-        epilog='_____')
+        )
     
-    parser.add_argument('mode', choices=['index', 'query'])
+    parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index, or query')
 
     if parser.parse_known_args()[0].mode == 'index':
         parser.add_argument('filename', action='store_const', help="Path to the FASTA file")
@@ -21,11 +23,12 @@ def main():
     elif parser.parse_known_args()[0].mode == 'query':
         parser.add_argument('-n', '--name', help='Name of the index')
 
-    args = parser.parse_args()
+    args = parser.parse_args(sys.argv)
 
-    file_path = args['filename']
+    file_path = args.filename
     file_name = os.path.basename(file_path)
     index_name, _ = os.path.splitext(file_name)
+
 
     # Text = 'TGACATTGCGAGAAATAGTGCCCTCCTTTTGCCGTATTTCCAAGTTCTAGGGTAATTTTT'
     for ref_genome in FASTA(file_path, fai=False, validate=False, gzip=False):
