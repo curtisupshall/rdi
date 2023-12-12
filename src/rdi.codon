@@ -1,11 +1,8 @@
 from bio import *
 import sys
-
-import datetime
 from python import os, argparse
 from index import build_index, write_dictionary
 from query import load_index
-from btree import Btree
 
 def main():
     system_args = sys.argv[1:]
@@ -21,7 +18,7 @@ def main():
     try:
         if parser.parse_known_args(system_args)[0].mode == 'query':
             parser.add_argument('-l', '--length', required=True, help='The length of kmers to query')
-            parser.add_argument('-r', '--occurrences', required=True, help='The number of occurrences to query')
+            parser.add_argument('-r', '--repeats', required=True, help='The number of repeats to query')
     except:
         return 0
 
@@ -63,7 +60,7 @@ def main():
         Rdi = load_index(index_path)
 
         # Query the index
-        r = int(args.occurrences)
+        r = int(args.repeats)
         l = int(args.length)
         rs = Rdi.find(l)
         ps = rs.find(r, List[int]([]))

@@ -1,7 +1,21 @@
-# rd-index
+'''bash
+  TTTTTT                 CCAA   TTTT
+AGAGGAGAGACC             CGCG   AACC
+AAAA    CCGGCC           CCGG 
+AAAA      GGAA      CCCCCCGCG  TCCCC
+AAAA    TTGGCC    AAGGAAGAGGG   ACAC
+AAGGAAAAGGAA    CCGGCC   AAGG   AACC
+AAAA    AAAA    AAAA     CGCG   ACAC
+AAAA    TTGGTT  CCGG     CCGG   AACC
+AAAA      AAAA  TTGGCC CCGGGG   ACAC
+AAAA      CCGGTT  CCGGGGGCCGG   AACC
+'''
+
+# rdi
+Repeat Detection Index is an index for finding repeated substrings.
 
 ## 0. Prerequisites
- - [Codon](https://docs.exaloop.io/codon/) **(with Python interoperability enabled!)** and [Seq](https://docs.seq-lang.org/):
+ 1. [Codon](https://docs.exaloop.io/codon/) **(with Python >=3.8 interoperability enabled)** and [Seq](https://docs.seq-lang.org/):
 
 ```bash
 bash -c "$(curl -fsSL https://exaloop.io/install.sh)"
@@ -10,33 +24,48 @@ curl -L https://github.com/exaloop/seq/releases/download/v0.11.3/seq-${platform}
 | tar zxvf - -C ˜/.codon/lib/codon/plugins
 ```
 
- - CMake:
- 
+Example for Python interoperability:
+```bash
+export CODON_PYTHON=/usr/lib/python3.8/config-3.8-x86_64-linux-gnu/libpython3.8.so
+```
+
+ 2. CMake:
+
 ```bash
 sudo apt install cmake
 ```
 
 ## 1. Setup
- 0. Clone the repo: `git clone git@github.com:curtisupshall/rd-index`
+ 0. Clone the repo: `git clone git@github.com:curtisupshall/rdi`
  1. Fetch submodules: `make submodules`
  2. Install libdivsufsort: `make libdivsufsort`
+ 3. Compile RDI: `make rdi`
 
 ## 2. Running the Program
+RDI runs in two modes. In `index` mode, RDI builds a repeat detection index and writes it to disk next to your input file. In `query` mode, you can make
+queries against the index.
+
+### Index Mode
+
 ```bash
-make rdi
+./rdi index path/to/your/file.fa
 ```
 
-## 3. Usage (to be implemented)
+### Query Mode
 
-Index a string
 ```bash
-rdi index mystring.txt
-```
-```bash
-cat mystring.txt > rdi index -o myindex.rdi
+./rdi query -l 10 -r 6
 ```
 
-Reading from the index
-```bash
-rdi query -l 10 -r 6
-```
+|Name|Type|Description
+|----|----|-----------
+|`-h`, `--help`| - |Help
+|`-r`, `--repeats`|`int`|Repeats
+|`-l`, `--length`|`int`|Kmer length
+
+## 3. The Data Structure
+
+## 4. Future Work
+ - Parallelization
+ - Pipelining
+ - TBD.
