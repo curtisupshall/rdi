@@ -38,7 +38,7 @@ sudo apt install cmake
 ## 1. Setup
  0. Clone the repo: `git clone git@github.com:curtisupshall/rdi`
  1. Fetch submodules: `make submodules`
- 2. Install libdivsufsort: `make libdivsufsort`
+ 2. Install [libdivsufsort](https://github.com/y-256/libdivsufsort): `make libdivsufsort`
  3. Compile RDI: `make rdi`
 
 ## 2. Running the Program
@@ -64,6 +64,7 @@ queries against the index.
 |`-l`, `--length`|`int`|Kmer length
 
 ## 3. Future Work
+ - Indexing strategy; particularly around [perfect minimal hashing](https://en.wikipedia.org/wiki/Perfect_hash_function)
  - Parallelization
  - Pipelining:
 ```bash
