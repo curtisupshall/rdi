@@ -10,24 +10,14 @@ libdivsufsort:
 	make && \
 	sudo make install
 
-example:
-	export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH
-	gcc src/example.c -Wall -I ./include -o bin/example.out -Llib -ldivsufsort
-
 clean:
-	rm -rf extern/libdivsufsort/build bin/*.out lib/*
+	rm -rf rdi data/*.rdi .rdilist
 
 rdi:
-	codon build -plugin seq src/rdi.codon -o bin/rdi
-
-run:
-	./bin/rdi
+	codon build -plugin seq src/rdi.codon -o rdi
 
 btree:
-	~/.codon/bin/codon run -plugin seq src/btree.codon
-
-home:
-	echo $(HOME)
+	codon run -plugin seq src/btree.codon
 
 PHONY:
-	rdi
+	submodules libdivsufsort clean rdi btree
