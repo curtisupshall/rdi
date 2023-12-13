@@ -14,7 +14,7 @@ clean:
 	rm -rf rdi data/*.rdi .rdilist
 
 rdi:
-	codon build -plugin seq src/rdi.codon -o rdi
+	codon build -release -plugin seq src/rdi.codon -o rdi
 
 btree:
 	codon run -plugin seq src/btree.codon
