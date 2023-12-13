@@ -1,15 +1,6 @@
-```bash
-  TTTTTT                 CCAA   TTTT
-AGAGGAGAGACC             CGCG   AACC
-AAAA    CCGGCC           CCGG 
-AAAA      GGAA      CCCCCCGCG  TCCCC
-AAAA    TTGGCC    AAGGAAGAGGG   ACAC
-AAGGAAAAGGAA    CCGGCC   AAGG   AACC
-AAAA    AAAA    AAAA     CGCG   ACAC
-AAAA    TTGGTT  CCGG     CCGG   AACC
-AAAA      AAAA  TTGGCC CCGGGG   ACAC
-AAAA      CCGGTT  CCGGGGGCCGG   AACC
-```
+<p align="center">
+  <img src="assets/logo.png" alt="Rdi"/>
+</p>
 
 # rdi
 Repeat Detection Index is an index for finding repeated substrings.
