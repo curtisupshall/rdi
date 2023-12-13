@@ -1,4 +1,4 @@
-'''bash
+```bash
   TTTTTT                 CCAA   TTTT
 AGAGGAGAGACC             CGCG   AACC
 AAAA    CCGGCC           CCGG 
@@ -9,7 +9,7 @@ AAAA    AAAA    AAAA     CGCG   ACAC
 AAAA    TTGGTT  CCGG     CCGG   AACC
 AAAA      AAAA  TTGGCC CCGGGG   ACAC
 AAAA      CCGGTT  CCGGGGGCCGG   AACC
-'''
+```
 
 # rdi
 Repeat Detection Index is an index for finding repeated substrings.
@@ -38,7 +38,7 @@ sudo apt install cmake
 ## 1. Setup
  0. Clone the repo: `git clone git@github.com:curtisupshall/rdi`
  1. Fetch submodules: `make submodules`
- 2. Install libdivsufsort: `make libdivsufsort`
+ 2. Install [libdivsufsort](https://github.com/y-256/libdivsufsort): `make libdivsufsort`
  3. Compile RDI: `make rdi`
 
 ## 2. Running the Program
@@ -63,9 +63,15 @@ queries against the index.
 |`-r`, `--repeats`|`int`|Repeats
 |`-l`, `--length`|`int`|Kmer length
 
-## 3. The Data Structure
-
-## 4. Future Work
+## 3. Future Work
+ - Indexing strategy; particularly around [perfect minimal hashing](https://en.wikipedia.org/wiki/Perfect_hash_function)
  - Parallelization
- - Pipelining
- - TBD.
+ - Pipelining:
+```bash
+cat mysequence.fa | rdi index
+echo "30 10" | rdi query
+```
+ - REPL
+
+## 4. References
+Many thanks to M. Oguzhan Kulekci of Indiana University, Bloomington, for providing the indexing algorithm used in this project, as well as pseudocode, examples, and general guidance.
