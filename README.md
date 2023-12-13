@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="Rdi"/>
 </p>
 
-# rdi
+# 🧬 rdi
 Repeat Detection Index is an index for finding repeated substrings.
 
 ## 0. Prerequisites
