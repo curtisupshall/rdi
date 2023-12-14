@@ -10,3 +10,4 @@ data/chr22.fa
 
 **/*.rdi
 .rdilist
+*.rdibench

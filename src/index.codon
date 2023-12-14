@@ -50,6 +50,8 @@ def build_index(Text: str):
 
     # Temporary dictionary used to store the index
     dictionary = Dict[int, Dict[int, List[int]]]()
+    ls = set()
+    rs = set()
 
     for i in range(1, n + 1):
         if (LCP[i] < LCP[i + 1]):
@@ -76,8 +78,10 @@ def build_index(Text: str):
                     dictionary[l][r] = list()
                 
                 dictionary[l][r].append(p)
+                ls.add(l)
+                rs.add(r)
 
-    return dictionary
+    return (dictionary, list(ls), list(rs))
 
 def show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')

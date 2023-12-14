@@ -1,6 +1,6 @@
 from bio import *
 import sys
-from python import os, argparse
+from python import os, argparse, random
 from index import build_index, write_dictionary
 from query import load_index
 
@@ -15,10 +15,15 @@ def main():
     parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index, or query')
     parser.add_argument('file_path', help='Path to your FASTA file')
 
+    mode = parser.parse_known_args(system_args)[0].mode
     try:
-        if parser.parse_known_args(system_args)[0].mode == 'query':
+        if mode == 'query':
             parser.add_argument('-l', '--length', required=True, help='The length of kmers to query')
             parser.add_argument('-r', '--repeats', required=True, help='The number of repeats to query')
+            parser.add_argument('-v', '--verbose', required=False, help='Print statistics')
+        elif mode == 'index':
+            parser.add_argument('-b', '--benchmark', help='Number of iterations for a benchmark file')
+
     except:
         return 0
 
@@ -46,7 +51,15 @@ def main():
     if mode == 'index':
         # Index the FASTA file
         print(f'Writing "{index_path}"... ')
-        index = build_index(Text)
+        (index, ls, rs) = build_index(Text)
+
+        if args.benchmark:
+            with open(f'{file_path}.rdibench', 'w') as f:
+                for _ in range(int(args.benchmark)):
+                    l = random.choice(ls)
+                    r = random.choice(rs)
+                    f.write(f'{l} {r}\n')
+
         write_dictionary(index, index_path)
         print('\bDone.')
 
