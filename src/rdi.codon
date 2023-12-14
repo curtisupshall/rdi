@@ -18,9 +18,10 @@ def main():
     mode = parser.parse_known_args(system_args)[0].mode
     try:
         if mode == 'query':
-            parser.add_argument('-l', '--length', required=True, help='The length of kmers to query')
-            parser.add_argument('-r', '--repeats', required=True, help='The number of repeats to query')
-            parser.add_argument('-v', '--verbose', required=False, help='Print statistics')
+            parser.add_argument('-l', '--length', required=False, help='The length of kmers to query')
+            parser.add_argument('-r', '--repeats', required=False, help='The number of repeats to query')
+            parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
+            parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
         elif mode == 'index':
             parser.add_argument('-b', '--benchmark', help='Number of iterations for a benchmark file')
 
@@ -71,18 +72,33 @@ def main():
 
         # Build btree
         Rdi = load_index(index_path)
+        queries = List[Tuple[int, int]]([])
+        
+        # Read queries from file/stdin
+        if args.input:
+            with open(args.input, 'r') as f:
+                for line in f:
+                    query = line.strip().split(' ')
+                    l, r = query
+                    queries.append((int(l), int(r)))
+
+        # Read query from CLI args
+        elif args.length and args.repeats:
+            queries.append((int(args.length), int(args.repeats)))
 
         # Query the index
-        r = int(args.repeats)
-        l = int(args.length)
-        rs = Rdi.find(l)
-        ps = rs.find(r, List[int]([]))
+        for query in queries:
+            (l, r) = query
+            rs = Rdi.find(l)
+            ps = rs.find(r, List[int]([]))
 
-        for p in (ps):
-            print(f'{Text[p:p+l]} @{p}')
+            for p in (ps):
+                print(f'{l} {Text[p:p+l]} @{p}')
 
-        # Print query statistics
-        print(f'\nFound {len(ps)} kmers of length {l} occurring {r} {"time" if r == 1 else "times"}')
+            # Print query statistics
+            if args.verbose:
+                print(f'> Found {len(ps)} kmers of length {l} occurring {r} {"time" if r == 1 else "times"}')
+
         return 0
 
 main()
