@@ -1,6 +1,6 @@
 from bio import *
 import sys
-from python import os, argparse, random
+from python import os, argparse, random, time
 from index import build_index, write_dictionary
 from query import load_index
 
@@ -86,6 +86,9 @@ def main():
         elif args.length and args.repeats:
             queries.append((int(args.length), int(args.repeats)))
 
+        # Measure time to complete requests
+        start_time = time.time()
+
         # Query the index
         for query in queries:
             (l, r) = query
@@ -99,6 +102,8 @@ def main():
             if args.verbose:
                 print(f'> Found {len(ps)} kmers of length {l} occurring {r} {"time" if r == 1 else "times"}')
 
+        end_time = time.time()
+        print(f'> Ran f{len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
         return 0
 
 main()
