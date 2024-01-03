@@ -2,6 +2,19 @@
   <img src="assets/logo.png" alt="Rdi"/>
 </p>
 
+## Abstract
+**Motivation:** In bioinformatics, repeated substring detection is an essential task used in structural
+variant analysis, comparative genomics, gene assembly, and others. However, existing methods for
+finding repeats can be computationally expensive and may not scale well to large datasets.
+
+**Results:** We present RDI: an algorithm to produce an efficient and scalable index that will
+return all strings of length $L$ such that they appear exactly $R$ times on the target sequence $T$
+when queried with $L$ and $R$. RDI answers queries in approximately $O(\log n)$ time, where $n$ is
+the length of the target sequence. On average, our index files are 3.27:1 compared to sequence
+size. Preliminary testing shows thatRDI is able to service 1,000,000 queries in 4.00 seconds 
+(for $n = 1,986$).
+
+
 # 🧬 rdi
 Repeat Detection Index is an index for finding repeated substrings.
 
