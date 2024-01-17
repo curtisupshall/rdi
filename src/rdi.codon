@@ -103,7 +103,7 @@ def main():
                 print(f'> Found {len(ps)} kmers of length {l} occurring {r} {"time" if r == 1 else "times"}')
 
         end_time = time.time()
-        print(f'> Ran f{len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
+        print(f'> Ran {len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
         return 0
 
 main()
