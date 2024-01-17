@@ -2,19 +2,6 @@
   <img src="assets/logo.png" alt="Rdi"/>
 </p>
 
-## Abstract
-**Motivation:** In bioinformatics, repeated substring detection is an essential task used in structural
-variant analysis, comparative genomics, gene assembly, and others. However, existing methods for
-finding repeats can be computationally expensive and may not scale well to large datasets.
-
-**Results:** We present RDI: an algorithm to produce an efficient and scalable index that will
-return all strings of length $L$ such that they appear exactly $R$ times on the target sequence $T$
-when queried with $L$ and $R$. RDI answers queries in approximately $O(\log n)$ time, where $n$ is
-the length of the target sequence. On average, our index files are 3.27:1 compared to sequence
-size. Preliminary testing shows thatRDI is able to service 1,000,000 queries in 4.00 seconds 
-(for $n = 1,986$).
-
-
 # 🧬 rdi
 Repeat Detection Index is an index for finding repeated substrings.
 
@@ -25,7 +12,7 @@ Repeat Detection Index is an index for finding repeated substrings.
 bash -c "$(curl -fsSL https://exaloop.io/install.sh)"
 export platform=$(uname -s | awk '{print tolower($0)}')-$(uname -m)
 curl -L https://github.com/exaloop/seq/releases/download/v0.11.3/seq-${platform}.tar.gz \
-| tar zxvf - -C ˜/.codon/lib/codon/plugins
+| tar zxvf - -C ~/.codon/lib/codon/plugins
 ```
 
 Example for Python interoperability:
@@ -66,16 +53,33 @@ queries against the index.
 |`-h`, `--help`| - |Help
 |`-r`, `--repeats`|`int`|Repeats
 |`-l`, `--length`|`int`|Kmer length
+|`-i`, `--input`|`string`|Path to batch query file
+
+#### Batch Input File
+Write each query as an ordered pair of length, then repeat count. Example:
+
+`$ cat my-file.txt`:
+
+> ```
+> 30 20
+> 10 50
+
+`./rdi query data/test.fa -i my-file.txt`:
+
+> ```
+> 10 GGCCAAGGCG @712432
+> 10 TAATCCTAGC @562644
+> 10 TACAGGTGCC @1220261
+> 10 TAGCTGGGTG @1831828
+> 10 TGCGGTGGCT @1821871
+> 10 TTTGCCATGT @266207
+> 10 TTTTGCCATG @790679
+> > Ran 2 queries in 0.240325927734375 ms
+
 
 ## 3. Future Work
  - Indexing strategy; particularly around [perfect minimal hashing](https://en.wikipedia.org/wiki/Perfect_hash_function)
  - Parallelization
- - Pipelining:
-```bash
-cat mysequence.fa | rdi index
-echo "30 10" | rdi query
-```
- - REPL
 
 ## 4. References
-Many thanks to M. Oguzhan Kulekci of Indiana University, Bloomington, for providing the indexing algorithm used in this project, as well as pseudocode, examples, and general guidance.
+Many thanks to M. Oguzhan Kulekci for providing the indexing algorithm used in this project, as well as pseudocode, examples, and general guidance.
