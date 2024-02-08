@@ -7,8 +7,18 @@ from python import os, json, argparse, bz2
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
+def show_table(Text, n, SA, LCP, limit):
+    print('---- Table 1 ----\n')
+    print('i \tSA[i]\tLCP[i]\tT[SA[i]..n]')
+    # print
+    for i in range(limit + 1):
+        sa_index = int(SA[i])
+        substring = Text[sa_index:n]
+        print(f'{i}\t{sa_index}\t{LCP[i]}\t{substring}$')
+
 # Kasai Algorithm
 def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
+    print("Building LCP array...")
     lcp = List[int]([0] * (n))
     rank = List[int]([0] * n)
     k = 0
@@ -91,11 +101,14 @@ def index_fastq():
 
     print("Done. Length of reads = " + str(len(reads)))
 
-    Text = '$'.join(reads)
+    Text = '_'.join(reads)
     n = len(Text)
 
     print("Length of built Text: " + str(len(Text)))
 
-    build_suffix_array(Text, n)
+    SA = build_suffix_array(Text, n)
+    LCP = build_lcp_array(Text, n, SA)
+
+    show_table(Text, n, SA, LCP, 10)
 
 index_fastq()
