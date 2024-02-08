@@ -92,8 +92,10 @@ def main():
         # Query the index
         for query in queries:
             (l, r) = query
-            rs = Rdi.find(l)
-            ps = rs.find(r, List[int]([]))
+            # rs = Rdi.find(l)
+            rs = Rdi[l] if l in Rdi else {}
+            # ps = rs.find(r, List[int]([]))
+            ps = rs[r] if r in rs else List[int]([])
 
             for p in (ps):
                 print(f'{l} {Text[p:p+l]} @{p}')
