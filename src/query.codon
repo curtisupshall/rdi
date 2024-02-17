@@ -1,8 +1,7 @@
 from python import json, bz2
 from btree import Btree
 
-def load_index(index_path) -> Btree[Btree[List[int]]]:
-    # dictionary = Dict[int, Dict[int, List[int]]]()
+def load_index_as_btree(index_path) -> Btree[Btree[List[int]]]:
     Rdi = Btree[Btree[List[int]]]()
 
     with bz2.BZ2File(index_path, 'rb') as f:
@@ -22,3 +21,21 @@ def load_index(index_path) -> Btree[Btree[List[int]]]:
                             rlist.append(p)
     
     return Rdi
+
+def load_index(index_path) -> Dict[int, Dict[int, List[int]]]:
+    Rdi = Dict[int, Dict[int, List[int]]]()
+
+    with bz2.BZ2File(index_path, 'rb') as f:
+        dictionary = json.loads(f.read().decode('utf-8'))
+
+        for l, rs in dictionary.items():            
+            Rdi[int(l)] = Dict[int, List[int]]()
+
+            for r, ps in rs.items():
+                Rdi[int(l)][int(r)] = List[int]([])
+
+                for p in ps:
+                    Rdi[int(l)][int(r)].append(int(p))
+    
+    return Rdi
+
