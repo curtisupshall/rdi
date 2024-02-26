@@ -11,9 +11,9 @@ def main():
         prog='rdi',
         description='Repeat Detection Index',
         )
-    
-    parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index, or query')
-    parser.add_argument('file_path', help='Path to your FASTA file')
+
+    parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index or query')
+    parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
 
     mode = parser.parse_known_args(system_args)[0].mode
     try:
@@ -23,6 +23,7 @@ def main():
             parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
             parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
         elif mode == 'index':
+            parser.add_argument('--reference', required=True, help='The reference genome')
             parser.add_argument('-b', '--benchmark', help='Number of iterations for a benchmark file')
 
     except:
@@ -34,24 +35,50 @@ def main():
         return 0
 
     file_path = args.file_path
+    reference_file_path = args.reference
     mode = args.mode
 
-    # Check if FASTA file actually exists
+    # Check if file actually exists
     if not os.path.exists(file_path):
         print(f'No file was found at {file_path}. Exiting.')
+        return 0
+    
+    # Check if reference file actually exists
+    if not os.path.exists(file_path):
+        print(f'No reference fiel was found at {reference_file_path}. Exiting.')
         return 0
 
     index_path = f'{file_path}.rdi'
     Text = ''
 
-    # Read the FASTA file
-    for read in FASTA(file_path, fai=False, validate=False, gzip=False):
-        Text = str(read.seq).upper()
+    reads = list()
+    num_base_pairs = 0
+    reference_length = -1
+
+    print("Reading file...")
+    for read in SAM(file_path):
+        num_base_pairs = num_base_pairs + len(read.seq)
+        reads.append(str(read.seq).upper())
+
+    print("Num base pairs: " + str(num_base_pairs))
+    
+    print ("Reading reference genome...")
+    for read in FASTA(reference_file_path, fai=False, validate=False, gzip=False):
+        reference_length = len(read.seq)
         break
+
+    print("Reference genome length: " + str(reference_length))
+
+    coverage = num_base_pairs / reference_length
+    print("Approximate coverage: " + str(coverage))
+
+    # sys.exit()
+
+    Text = '_'.join(reads)
+    print("Length of built Text from FASTA: " + str(len(Text)))
 
     if mode == 'index':
         # Index the FASTA file
-        print(f'Writing "{index_path}"... ')
         (index, ls, rs) = build_index(Text)
 
         if args.benchmark:

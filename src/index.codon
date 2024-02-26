@@ -2,13 +2,14 @@ from bio import *
 import sys
 # import os
 import datetime
-from python import os, json, argparse, bz2
+from python import os, json, argparse, bz2, tqdm
 
 
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
 def write_dictionary(index, index_path):
+    print(f'Writing "{index_path}"... ')
     with open('.rdilist', 'a') as f:
         f.write(f'{index_path}\n')
 
@@ -21,9 +22,11 @@ def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
     rank = List[int]([0] * n)
     k = 0
 
+    print("Allocating ranks...")
     for i in range(n):
         rank[int(suffix_array[i])] = i
 
+    print("Populating LCP array...")
     for i in range(n):
         if rank[i] == n - 1:
             k = 0
@@ -35,6 +38,7 @@ def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
         if k > 0:
             k -= 1
 
+    print("Done building LCP array.")
     return [0] + [0] + lcp + [0]
 
 def build_suffix_array(Text: str, n):
@@ -45,9 +49,14 @@ def build_suffix_array(Text: str, n):
 
 def build_index(Text: str):
     n = len(Text)
+
+    print("Building suffix array...")
     SA = build_suffix_array(Text, n)
+
+    print("Building LCP array...")
     LCP = build_lcp_array(Text, n, SA)
 
+    print("Building RDI dictionary.")
     # Temporary dictionary used to store the index
     dictionary = Dict[int, Dict[int, List[int]]]()
     ls = set()

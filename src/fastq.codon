@@ -92,23 +92,6 @@ def index_fastq():
     # 
     # 
 
-    reads = list()
-
-    for r in FASTQ('data/1_control_18S_2019_minq7.fastq'):
-        sequence = r.read
-        reads.append(str(sequence))
-        # print((str(sequence) + "$"))
-
-    print("Done. Length of reads = " + str(len(reads)))
-
-    Text = '_'.join(reads)
-    n = len(Text)
-
-    print("Length of built Text: " + str(len(Text)))
-
-    SA = build_suffix_array(Text, n)
-    LCP = build_lcp_array(Text, n, SA)
-
-    show_table(Text, n, SA, LCP, 10)
+    
 
 index_fastq()
