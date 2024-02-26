@@ -4,6 +4,9 @@ import sys
 import datetime
 from python import os, json, argparse, bz2, tqdm
 
+from threading import Lock
+import openmp as omp
+
 
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
@@ -62,7 +65,18 @@ def build_index(Text: str):
     # ls = set()
     # rs = set()
 
-    with tqdm.tqdm(total=n) as progress:
+    reported = List[Tuple[int, int, int]]()
+    # lock = Lock()  # or RLock for reentrant lock
+
+
+
+    with tqdm.tqdm(total=n, smoothing=0) as progress:
+        @omp.master
+        def report(item):
+            reported.append(item)
+            progress.update(1)
+
+        @par(schedule='dynamic', chunk_size=1000, num_threads=16, ordered=False)
         for i in range(1, n + 1):
             if (LCP[i] < LCP[i + 1]):
                 for k in range(LCP[i] + 1, LCP[i + 1] + 1):            
@@ -81,16 +95,22 @@ def build_index(Text: str):
                     l: int = k               # Length of the string
                     r: int = j_min - i       # Number of occurrences
 
-                    if l not in dictionary:
-                        dictionary[l] = dict()
+                    # if l not in dictionary:
+                    #     dictionary[l] = dict()
                     
-                    if r not in dictionary[l]:
-                        dictionary[l][r] = list()
+                    # if r not in dictionary[l]:
+                    #     dictionary[l][r] = list()
                     
-                    dictionary[l][r].append(p)
+                    # dictionary[l][r].append(p)
                     # ls.add(l)
                     # rs.add(r)
-                progress.update(1)
+
+                    # with lock:
+                    #     pass
+                    report((p, l, r))
+
+                # with lock:
+                #     progress.update(1)
 
     return (dictionary, List[int](), List[int]())
 
