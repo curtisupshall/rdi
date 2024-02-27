@@ -60,59 +60,56 @@ def build_index(Text: str):
     LCP = build_lcp_array(Text, n, SA)
 
     print("Building RDI dictionary.")
-    # Temporary dictionary used to store the index
+
     dictionary = Dict[int, Dict[int, List[int]]]()
-    # ls = set()
-    # rs = set()
 
-    reported = List[Tuple[int, int, int]]()
-    # lock = Lock()  # or RLock for reentrant lock
+    progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
+        
+    ls = Set[int]()
+    rs = Set[int]()
 
+    @omp.critical
+    def report(p: int, l: int, r: int):
+        if l not in dictionary:
+            dictionary[l] = dict()
+        
+        if r not in dictionary[l]:
+            dictionary[l][r] = list()
+        
+        dictionary[l][r].append(p)
+        ls.add(l)
+        rs.add(r)
+        # reported.append(item)
+    
+    @omp.critical
+    def increment_progress():
+        progress.update(1)
 
+    @par(schedule='dynamic', chunk_size=1000, num_threads=8, ordered=False)
+    for i in range(1, n + 1):
+        increment_progress()
+        if (LCP[i] < LCP[i + 1]):
+            for k in range(LCP[i] + 1, LCP[i + 1] + 1):            
+                # Calculate j > i is the minimum value such that LCP[j] < LCP[i + 1]
+                j_min = -1
 
-    with tqdm.tqdm(total=n, smoothing=0) as progress:
-        @omp.master
-        def report(item):
-            reported.append(item)
-            progress.update(1)
+                for j in range(i + 1, n + 2):
+                    if (LCP[j] < k):
+                        j_min = j
+                        break
 
-        @par(schedule='dynamic', chunk_size=1000, num_threads=16, ordered=False)
-        for i in range(1, n + 1):
-            if (LCP[i] < LCP[i + 1]):
-                for k in range(LCP[i] + 1, LCP[i + 1] + 1):            
-                    # Calculate j > i is the minimum value such that LCP[j] < LCP[i + 1]
-                    j_min = -1
+                if j <= i:
+                    continue
 
-                    for j in range(i + 1, n + 2):
-                        if (LCP[j] < k):
-                            j_min = j
-                            break
+                p: int = int(SA[i])      # Position in the text
+                l: int = k               # Length of the string
+                r: int = j_min - i       # Number of occurrences
 
-                    if j <= i:
-                        continue
+                report(p, l, r)
 
-                    p: int = int(SA[i])      # Position in the text
-                    l: int = k               # Length of the string
-                    r: int = j_min - i       # Number of occurrences
+    progress.close()
 
-                    # if l not in dictionary:
-                    #     dictionary[l] = dict()
-                    
-                    # if r not in dictionary[l]:
-                    #     dictionary[l][r] = list()
-                    
-                    # dictionary[l][r].append(p)
-                    # ls.add(l)
-                    # rs.add(r)
-
-                    # with lock:
-                    #     pass
-                    report((p, l, r))
-
-                # with lock:
-                #     progress.update(1)
-
-    return (dictionary, List[int](), List[int]())
+    return (dictionary, List[int](ls), List[int](rs))
 
 def show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')
