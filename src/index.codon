@@ -11,13 +11,13 @@ import openmp as omp
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
-def write_dictionary(index, index_path):
-    print(f'Writing "{index_path}"... ')
-    with open('.rdilist', 'a') as f:
-        f.write(f'{index_path}\n')
+# def write_dictionary(index, index_path):
+#     print(f'Writing "{index_path}"... ')
+#     with open('.rdilist', 'a') as f:
+#         f.write(f'{index_path}\n')
 
-    with bz2.BZ2File(index_path, 'w') as f:
-        f.write(json.dumps(index).encode('utf-8'))
+#     with bz2.BZ2File(index_path, 'w') as f:
+#         f.write(json.dumps(index).encode('utf-8'))
 
 # Kasai Algorithm
 def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
@@ -50,7 +50,7 @@ def build_suffix_array(Text: str, n):
     
     return SA
 
-def build_index(Text: str):
+def create_index(Text: str, index_path: str):
     n = len(Text)
 
     print("Building suffix array...")
@@ -64,28 +64,28 @@ def build_index(Text: str):
     dictionary = Dict[int, Dict[int, List[int]]]()
 
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
-        
-    ls = Set[int]()
-    rs = Set[int]()
+    f = bz2.BZ2File(index_path, 'w')
 
     @omp.critical
     def report(p: int, l: int, r: int):
-        if l not in dictionary:
-            dictionary[l] = dict()
+        # if l not in dictionary:
+        #     dictionary[l] = dict()
         
-        if r not in dictionary[l]:
-            dictionary[l][r] = list()
+        # if r not in dictionary[l]:
+        #     dictionary[l][r] = list()
         
-        dictionary[l][r].append(p)
-        ls.add(l)
-        rs.add(r)
+        # dictionary[l][r].append(p)
+        # ls.add(l)
+        # rs.add(r)
         # reported.append(item)
-    
+        value = Str(f'{p},{l},{r}\n')
+        f.write(value.encode('utf-8'))
+
     @omp.critical
     def increment_progress():
         progress.update(1)
 
-    @par(schedule='dynamic', chunk_size=1000, num_threads=8, ordered=False)
+    @par(schedule='dynamic', chunk_size=1000, num_threads=24, ordered=False)
     for i in range(1, n + 1):
         increment_progress()
         if (LCP[i] < LCP[i + 1]):
@@ -107,9 +107,13 @@ def build_index(Text: str):
 
                 report(p, l, r)
 
+    f.close()
     progress.close()
 
-    return (dictionary, List[int](ls), List[int](rs))
+    del SA
+    del LCP
+
+    return
 
 def show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')

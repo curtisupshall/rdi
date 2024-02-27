@@ -1,7 +1,7 @@
 from bio import *
 import sys
 from python import os, argparse, random, time
-from index import build_index, write_dictionary
+from index import create_index
 from query import load_index
 
 def main():
@@ -14,6 +14,7 @@ def main():
 
     parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index or query')
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
+    parser.add_argument('--reference', required=True, help='The reference genome')
 
     mode = parser.parse_known_args(system_args)[0].mode
     try:
@@ -23,7 +24,6 @@ def main():
             parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
             parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
         elif mode == 'index':
-            parser.add_argument('--reference', required=True, help='The reference genome')
             parser.add_argument('-b', '--benchmark', help='Number of iterations for a benchmark file')
 
     except:
@@ -48,7 +48,7 @@ def main():
         print(f'No reference fiel was found at {reference_file_path}. Exiting.')
         return 0
 
-    index_path = f'{file_path}.rdi'
+    index_path = f'{file_path}.csv.rdi2'
     Text = ''
 
     reads = list()
@@ -79,17 +79,20 @@ def main():
 
     if mode == 'index':
         # Index the FASTA file
-        (index, ls, rs) = build_index(Text)
+        # (index, ls, rs) = build_index(Text)
+        create_index(Text, index_path)
 
         if args.benchmark:
             with open(f'{file_path}.rdibench', 'w') as f:
-                for _ in range(int(args.benchmark)):
-                    l = random.choice(ls)
-                    r = random.choice(rs)
-                    f.write(f'{l} {r}\n')
+                pass
+                # for _ in range(int(args.benchmark)):
+                #     l = random.choice(ls)
+                #     r = random.choice(rs)
+                #     f.write(f'{l} {r}\n')
 
-        write_dictionary(index, index_path)
+        # write_dictionary(index, index_path)
         print('\bDone.')
+        return 0
 
     elif mode == 'query':
         # Check if the index has been build
