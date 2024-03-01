@@ -141,6 +141,7 @@ def main():
     elif mode == 'assembly':
         print("Loading RDI dictionary...")
         Rdi = load_index(index_path)
+        # Rdi = {}
 
         anchors = find_candidate_anchors(Rdi, coverage)
         print("Found " + str(len(anchors)) + " anchor(s):")
