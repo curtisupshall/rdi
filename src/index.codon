@@ -68,18 +68,15 @@ def create_index(Text: str, index_path: str):
 
     @omp.critical
     def report(p: int, l: int, r: int):
-        # if l not in dictionary:
-        #     dictionary[l] = dict()
+        if l not in dictionary:
+            dictionary[l] = dict()
         
-        # if r not in dictionary[l]:
-        #     dictionary[l][r] = list()
+        if r not in dictionary[l]:
+            dictionary[l][r] = list()
         
-        # dictionary[l][r].append(p)
+        dictionary[l][r].append(p)
         # ls.add(l)
         # rs.add(r)
-        # reported.append(item)
-        value = Str(f'{p},{l},{r}\n')
-        f.write(value.encode('utf-8'))
 
     @omp.critical
     def increment_progress():

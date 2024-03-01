@@ -2,7 +2,7 @@ from bio import *
 import sys
 from python import os, argparse, random, time
 from index import create_index
-from query import load_index
+from query import load_index, find_candidate_anchors
 
 def main():
     system_args = sys.argv[1:]
@@ -12,7 +12,7 @@ def main():
         description='Repeat Detection Index',
         )
 
-    parser.add_argument('mode', choices=['index', 'query'], help='Operation mode; index or query')
+    parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
     parser.add_argument('--reference', required=True, help='The reference genome')
 
@@ -48,7 +48,7 @@ def main():
         print(f'No reference fiel was found at {reference_file_path}. Exiting.')
         return 0
 
-    index_path = f'{file_path}.csv.rdi2'
+    index_path = f'{file_path}.rdi'
     Text = ''
 
     reads = list()
@@ -69,13 +69,13 @@ def main():
 
     print("Reference genome length: " + str(reference_length))
 
-    coverage = num_base_pairs / reference_length
+    coverage = int(num_base_pairs // reference_length)
     print("Approximate coverage: " + str(coverage))
 
     # sys.exit()
 
     Text = '_'.join(reads)
-    print("Length of built Text from FASTA: " + str(len(Text)))
+    print("Length of built Text from reads data: " + str(len(Text)))
 
     if mode == 'index':
         # Index the FASTA file
@@ -137,5 +137,13 @@ def main():
         end_time = time.time()
         print(f'> Ran {len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
         return 0
+
+    elif mode == 'assembly':
+        print("Loading RDI dictionary...")
+        Rdi = load_index(index_path)
+
+        anchors = find_candidate_anchors(Rdi, coverage)
+        print("Found " + str(len(anchors)) + " anchor(s):")
+        print(anchors)
 
 main()
