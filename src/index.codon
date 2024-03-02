@@ -2,13 +2,17 @@ from bio import *
 import sys
 # import os
 import datetime
-from python import os, json, argparse, bz2
+from python import os, json, argparse, bz2, tqdm
+
+from threading import Lock
+import openmp as omp
 
 
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
 def write_dictionary(index, index_path):
+    print(f'Writing "{index_path}"... ')
     with open('.rdilist', 'a') as f:
         f.write(f'{index_path}\n')
 
@@ -21,9 +25,11 @@ def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
     rank = List[int]([0] * n)
     k = 0
 
+    print("Allocating ranks...")
     for i in range(n):
         rank[int(suffix_array[i])] = i
 
+    print("Populating LCP array...")
     for i in range(n):
         if rank[i] == n - 1:
             k = 0
@@ -35,6 +41,7 @@ def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
         if k > 0:
             k -= 1
 
+    print("Done building LCP array.")
     return [0] + [0] + lcp + [0]
 
 def build_suffix_array(Text: str, n):
@@ -43,17 +50,38 @@ def build_suffix_array(Text: str, n):
     
     return SA
 
-def build_index(Text: str):
+def create_index(Text: str, index_path: str):
     n = len(Text)
+
+    print("Building suffix array...")
     SA = build_suffix_array(Text, n)
+
+    print("Building LCP array...")
     LCP = build_lcp_array(Text, n, SA)
 
-    # Temporary dictionary used to store the index
-    dictionary = Dict[int, Dict[int, List[int]]]()
-    ls = set()
-    rs = set()
+    print("Building RDI dictionary.")
 
+    dictionary = Dict[int, Dict[int, List[int]]]()
+
+    progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
+
+    @omp.critical
+    def report(p: int, l: int, r: int):
+        if l not in dictionary:
+            dictionary[l] = dict()
+        
+        if r not in dictionary[l]:
+            dictionary[l][r] = list()
+        
+        dictionary[l][r].append(p)
+
+    @omp.critical
+    def increment_progress():
+        progress.update(1)
+
+    @par(schedule='dynamic', chunk_size=1000, num_threads=24, ordered=False)
     for i in range(1, n + 1):
+        increment_progress()
         if (LCP[i] < LCP[i + 1]):
             for k in range(LCP[i] + 1, LCP[i + 1] + 1):            
                 # Calculate j > i is the minimum value such that LCP[j] < LCP[i + 1]
@@ -71,17 +99,14 @@ def build_index(Text: str):
                 l: int = k               # Length of the string
                 r: int = j_min - i       # Number of occurrences
 
-                if l not in dictionary:
-                    dictionary[l] = dict()
-                
-                if r not in dictionary[l]:
-                    dictionary[l][r] = list()
-                
-                dictionary[l][r].append(p)
-                ls.add(l)
-                rs.add(r)
+                report(p, l, r)
 
-    return (dictionary, list(ls), list(rs))
+    progress.close()
+
+    del SA
+    del LCP
+
+    return dictionary
 
 def show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')
