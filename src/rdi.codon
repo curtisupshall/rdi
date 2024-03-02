@@ -128,7 +128,7 @@ def main():
             ps = rs[r] if r in rs else List[int]([])
 
             for p in (ps):
-                print(f'{l} {Text[p:p+l]} @{p}')
+                print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
             # Print query statistics
             if args.verbose:
@@ -143,8 +143,9 @@ def main():
         Rdi = load_index(index_path)
         # Rdi = {}
 
-        anchors = find_candidate_anchors(Rdi, coverage)
+        anchors = find_candidate_anchors(Rdi, Text, coverage)
         print("Found " + str(len(anchors)) + " anchor(s):")
-        print(anchors)
+        for (p, l, r) in anchors:
+            print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
 main()

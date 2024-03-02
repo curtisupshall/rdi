@@ -50,7 +50,7 @@ def generate_anchor_queries(coverage: int, length: int) -> List[Tuple[int, int]]
 
     return [(l, c) for l in ls for c in cs]
 
-def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], coverage: int):
+def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], Text: str, coverage: int):
     target_length = 15 # Tune this later.
     anchors = List[Tuple[int, int, int]]()
 
@@ -74,6 +74,9 @@ def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], coverage: int):
         rs = Rdi[l] if l in Rdi else {}
         ps = rs[r] if r in rs else List[int]([])
         for p in ps:
+            substring = Text[p:p+l]
+            if ('_' in substring):
+                continue
             report(p, l, r)
         increment_progress()
 
