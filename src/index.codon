@@ -64,7 +64,6 @@ def create_index(Text: str, index_path: str):
     dictionary = Dict[int, Dict[int, List[int]]]()
 
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
-    f = bz2.BZ2File(index_path, 'w')
 
     @omp.critical
     def report(p: int, l: int, r: int):
@@ -102,13 +101,12 @@ def create_index(Text: str, index_path: str):
 
                 report(p, l, r)
 
-    f.close()
     progress.close()
 
     del SA
     del LCP
 
-    return
+    return dictionary
 
 def show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')
