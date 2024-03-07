@@ -1,7 +1,7 @@
 from bio import *
 import sys
 from python import os, argparse, random, time
-from index import create_index
+from index import create_index, write_dictionary
 from query import load_index, find_candidate_anchors
 
 def main():
@@ -78,9 +78,8 @@ def main():
     print("Length of built Text from reads data: " + str(len(Text)))
 
     if mode == 'index':
-        # Index the FASTA file
-        # (index, ls, rs) = build_index(Text)
-        create_index(Text, index_path)
+        # Index the input file
+        index = create_index(Text, index_path)
 
         if args.benchmark:
             with open(f'{file_path}.rdibench', 'w') as f:
@@ -90,7 +89,7 @@ def main():
                 #     r = random.choice(rs)
                 #     f.write(f'{l} {r}\n')
 
-        # write_dictionary(index, index_path)
+        write_dictionary(index, index_path)
         print('\bDone.')
         return 0
 
@@ -128,7 +127,7 @@ def main():
             ps = rs[r] if r in rs else List[int]([])
 
             for p in (ps):
-                print(f'{l} {Text[p:p+l]} @{p}')
+                print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
             # Print query statistics
             if args.verbose:
@@ -141,9 +140,11 @@ def main():
     elif mode == 'assembly':
         print("Loading RDI dictionary...")
         Rdi = load_index(index_path)
+        # Rdi = {}
 
-        anchors = find_candidate_anchors(Rdi, coverage)
+        anchors = find_candidate_anchors(Rdi, Text, coverage)
         print("Found " + str(len(anchors)) + " anchor(s):")
-        print(anchors)
+        for (p, l, r) in anchors:
+            print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
 main()

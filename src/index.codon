@@ -11,13 +11,13 @@ import openmp as omp
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
-# def write_dictionary(index, index_path):
-#     print(f'Writing "{index_path}"... ')
-#     with open('.rdilist', 'a') as f:
-#         f.write(f'{index_path}\n')
+def write_dictionary(index, index_path):
+    print(f'Writing "{index_path}"... ')
+    with open('.rdilist', 'a') as f:
+        f.write(f'{index_path}\n')
 
-#     with bz2.BZ2File(index_path, 'w') as f:
-#         f.write(json.dumps(index).encode('utf-8'))
+    with bz2.BZ2File(index_path, 'w') as f:
+        f.write(json.dumps(index).encode('utf-8'))
 
 # Kasai Algorithm
 def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
@@ -64,7 +64,6 @@ def create_index(Text: str, index_path: str):
     dictionary = Dict[int, Dict[int, List[int]]]()
 
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
-    f = bz2.BZ2File(index_path, 'w')
 
     @omp.critical
     def report(p: int, l: int, r: int):
@@ -75,8 +74,6 @@ def create_index(Text: str, index_path: str):
             dictionary[l][r] = list()
         
         dictionary[l][r].append(p)
-        # ls.add(l)
-        # rs.add(r)
 
     @omp.critical
     def increment_progress():
@@ -104,13 +101,12 @@ def create_index(Text: str, index_path: str):
 
                 report(p, l, r)
 
-    f.close()
     progress.close()
 
     del SA
     del LCP
 
-    return
+    return dictionary
 
 def show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')

@@ -1,6 +1,6 @@
 from python import json, bz2
 from btree import Btree
-from python import itertools, tqdm
+from python import tqdm
 import openmp as omp
 
 
@@ -48,15 +48,11 @@ def generate_anchor_queries(coverage: int, length: int) -> List[Tuple[int, int]]
     ls = [length] + [l for i in range(1, dl + 1) for l in (length + i, length - i)]
     cs = [coverage] + [c for i in range(1, dc + 1) for c in (coverage + i, coverage - i)]
 
-    return itertools.product(ls, cs)
+    return [(l, c) for l in ls for c in cs]
 
-def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], coverage: int):
+def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], Text: str, coverage: int):
     target_length = 15 # Tune this later.
     anchors = List[Tuple[int, int, int]]()
-
-    @omp.critical
-    def report(p: int, l: int, r: int):
-        anchors.append((p, l, r))
 
     print("Generating anchor queries...")
     queries = generate_anchor_queries(coverage, target_length)
@@ -64,12 +60,25 @@ def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], coverage: int):
     print("Querying index for cadidate...")
     progress = tqdm.tqdm(total=len(queries), smoothing=0)
 
-    @par(schedule='static', chunk_size=100, num_threads=8, ordered=False)
+    @omp.critical
+    def report(p: int, l: int, r: int):
+        anchors.append((p, l, r))
+
+    @omp.critical
+    def increment_progress():
+        progress.update(1)
+
+    @par(schedule='static', chunk_size=100, num_threads=32, ordered=False)
     for l, r in queries:
         # Find candidate strings using index
         rs = Rdi[l] if l in Rdi else {}
         ps = rs[r] if r in rs else List[int]([])
         for p in ps:
+            substring = Text[p:p+l]
+            if ('_' in substring):
+                continue
             report(p, l, r)
+        increment_progress()
 
+    progress.close()
     return anchors
