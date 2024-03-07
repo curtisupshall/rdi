@@ -14,7 +14,6 @@ def main():
 
     parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
-    parser.add_argument('--reference', required=True, help='The reference genome')
 
     mode = parser.parse_known_args(system_args)[0].mode
     try:
@@ -24,7 +23,7 @@ def main():
             parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
             parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
         elif mode == 'index':
-            parser.add_argument('-b', '--benchmark', help='Number of iterations for a benchmark file')
+            parser.add_argument('-c', '--coverage', required=False, help='The known coverage of the experiment')
 
     except:
         return 0
@@ -35,59 +34,33 @@ def main():
         return 0
 
     file_path = args.file_path
-    reference_file_path = args.reference
     mode = args.mode
 
     # Check if file actually exists
     if not os.path.exists(file_path):
         print(f'No file was found at {file_path}. Exiting.')
         return 0
-    
-    # Check if reference file actually exists
-    if not os.path.exists(file_path):
-        print(f'No reference fiel was found at {reference_file_path}. Exiting.')
-        return 0
 
-    index_path = f'{file_path}.rdi'
+    index_path = f'{file_path}.rdi.pkl'
     Text = ''
 
     reads = list()
-    num_base_pairs = 0
+    # num_base_pairs = 0
     reference_length = -1
 
     print("Reading file...")
-    for read in SAM(file_path):
-        num_base_pairs = num_base_pairs + len(read.seq)
+    for read in FASTQ(file_path):
+        # num_base_pairs = num_base_pairs + len(read.seq)
         reads.append(str(read.seq).upper())
-
-    print("Num base pairs: " + str(num_base_pairs))
-    
-    print ("Reading reference genome...")
-    for read in FASTA(reference_file_path, fai=False, validate=False, gzip=False):
-        reference_length = len(read.seq)
-        break
-
-    print("Reference genome length: " + str(reference_length))
-
-    coverage = int(num_base_pairs // reference_length)
-    print("Approximate coverage: " + str(coverage))
-
-    # sys.exit()
 
     Text = '_'.join(reads)
     print("Length of built Text from reads data: " + str(len(Text)))
 
     if mode == 'index':
+        coverage = int(args.coverage)
+        
         # Index the input file
         index = create_index(Text, index_path)
-
-        if args.benchmark:
-            with open(f'{file_path}.rdibench', 'w') as f:
-                pass
-                # for _ in range(int(args.benchmark)):
-                #     l = random.choice(ls)
-                #     r = random.choice(rs)
-                #     f.write(f'{l} {r}\n')
 
         write_dictionary(index, index_path)
         print('\bDone.')
