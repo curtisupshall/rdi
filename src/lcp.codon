@@ -1,0 +1,42 @@
+
+
+# TODO rename `s` to `Text`
+def build_lcp_array(s: str, n, suffix_array: List[Int[32]]) -> List[int]:
+    print("Building LCP array...")
+
+    lcp = List[int]([0] * (n))
+    rank = List[int]([0] * n)
+    k = 0
+
+    print("Allocating ranks...")
+    for i in range(n):
+        rank[int(suffix_array[i])] = i
+
+    print("Populating LCP array...")
+    # Kasai Algorithm
+    for i in range(n):
+        if rank[i] == n - 1:
+            k = 0
+            continue
+        j = int(suffix_array[rank[i] + 1])
+        while i + k < n and j + k < n and s[i + k] == s[j + k]:
+            k += 1
+        lcp[rank[i]] = k
+        if k > 0:
+            k -= 1
+
+    print("Done building LCP array.")
+    return [0] + [0] + lcp + [0]
+
+# def load_lcp_array(index_path):
+#     archive = RdiArchive[List[int]]()
+#     pass
+
+
+# def write_lcp_array(lcp_array, index_path):
+#     pass
+
+
+# def load_or_build_lcp_array(Text: str, n index_path: str):
+#     # Check if LCP array is already generated
+#     pass

@@ -1,8 +1,0 @@
-from index import write_dictionary
-
-my_dict = Dict[int, Dict[int, List[int]]]({})
-my_dict[1] = Dict[int, List[int]]({})
-my_dict[1][1000] = List[int]([2, 4, 6, 8, 10])
-
-
-write_dictionary(my_dict, 'out.rdi.pkl')

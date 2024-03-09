@@ -1,8 +1,8 @@
 from bio import *
 import sys
 from python import os, argparse, random, time
-from index import create_index, write_dictionary
-from query import load_index, find_candidate_anchors
+from index import create_index, load_index
+from query import find_candidate_anchors
 
 def main():
     system_args = sys.argv[1:]
@@ -41,7 +41,6 @@ def main():
         print(f'No file was found at {file_path}. Exiting.')
         return 0
 
-    index_path = f'{file_path}.rdi.pkl'
     Text = ''
 
     reads = list()
@@ -60,20 +59,15 @@ def main():
         coverage = int(args.coverage)
         
         # Index the input file
-        index = create_index(Text, index_path)
+        index = create_index(Text, file_path)
 
-        write_dictionary(index, index_path)
         print('\bDone.')
         return 0
 
     elif mode == 'query':
-        # Check if the index has been build
-        if not os.path.exists(index_path):
-            print(f'No RDI index was found for {file_path}. You can build an index by running:\n\t./rdi index {file_path}\n')
-            return 0
 
         # Build btree
-        Rdi = load_index(index_path)
+        Rdi = load_index(file_path)
         queries = List[Tuple[int, int]]([])
         
         # Read queries from file/stdin
@@ -110,14 +104,14 @@ def main():
         print(f'> Ran {len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
         return 0
 
-    elif mode == 'assembly':
-        print("Loading RDI dictionary...")
-        Rdi = load_index(index_path)
-        # Rdi = {}
+    # elif mode == 'assembly':
+    #     print("Loading RDI dictionary...")
+    #     Rdi = load_index(index_path)
+    #     # Rdi = {}
 
-        anchors = find_candidate_anchors(Rdi, Text, coverage)
-        print("Found " + str(len(anchors)) + " anchor(s):")
-        for (p, l, r) in anchors:
-            print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
+    #     anchors = find_candidate_anchors(Rdi, Text, coverage)
+    #     print("Found " + str(len(anchors)) + " anchor(s):")
+    #     for (p, l, r) in anchors:
+    #         print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
 main()

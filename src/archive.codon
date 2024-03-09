@@ -1,0 +1,41 @@
+import pickle
+import gzip
+
+class RdiArchive[T]:
+
+	def write(self, object: T, original_filename: str, extension: str):
+		path = f'{original_filename}{extension}'
+		
+		# Open file for write
+		jar = gzip.open(path, 'wb')
+		
+		# Dump the object
+		pickle.dump(object, jar)
+		jar.close()
+
+	def load(self, original_filename: str, extension: str) -> T:
+		path = f'{original_filename}{extension}'
+		
+		# Open file for write
+		jar = gzip.open(path, 'rb')
+		
+		# Dump the object
+		object = pickle.load(jar, T)
+		jar.close()
+
+		return object
+
+# Testing.
+# my_dict = Dict[int, Dict[int, List[int]]]({})
+# my_dict[1] = Dict[int, List[int]]({})
+# my_dict[1][1000] = List[int]([2, 4, 6, 8, 10])
+
+# archive = RdiArchive()
+
+# archive.write(my_dict, 'myfile', '.bin')
+
+# xs = archive.load('myfile', '.bin')
+
+
+# print("xs:")
+# print(xs)
