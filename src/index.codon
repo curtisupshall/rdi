@@ -8,7 +8,7 @@ import openmp as omp
 import datetime
 
 # Python imports
-from python import os, pickle, argparse, bz2, tqdm
+from python import os, pickle, argparse, bz2, tqdm, psutil
 
 # RDI imports
 from sa import load_or_build_suffix_array
@@ -79,8 +79,17 @@ def create_index(Text: str, file_path: str):
 
     progress.close()
 
+    available_memory = psutil.virtual_memory().available
+    print(f"Available memory before: {available_memory} bytes")
+
+
     del SA
     del LCP
+
+    available_memory = psutil.virtual_memory().available
+    print(f"Available memory before: {available_memory} bytes")
+
+    write_index(dictionary, file_path)
 
     return dictionary
 

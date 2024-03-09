@@ -59,7 +59,7 @@ def main():
         coverage = int(args.coverage)
         
         # Index the input file
-        index = create_index(Text, file_path)
+        create_index(Text, file_path)
 
         print('\bDone.')
         return 0
