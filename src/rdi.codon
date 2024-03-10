@@ -53,7 +53,7 @@ def main():
         reads.append(str(read.seq).upper())
 
     Text = '_'.join(reads)
-    print("Length of built Text from reads data: " + str(len(Text)))
+    print(f"Length of built Text from reads data: {len(Text), ','}")
 
     if mode == 'index':
         coverage = int(args.coverage)

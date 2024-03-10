@@ -12,7 +12,7 @@ from python import os, pickle, argparse, bz2, tqdm, psutil
 
 # RDI imports
 from sa import load_or_build_suffix_array
-from lcp import build_lcp_array
+from lcp import load_or_build_lcp_array
 from archive import RdiArchive
 
 
@@ -33,7 +33,7 @@ def create_index(Text: str, file_path: str):
 
     SA = load_or_build_suffix_array(Text, n, file_path)
 
-    LCP = build_lcp_array(Text, n, SA)
+    LCP = load_or_build_lcp_array(Text, n, SA, file_path)
 
     print("Building RDI dictionary.")
 
