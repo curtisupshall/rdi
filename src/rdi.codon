@@ -2,7 +2,7 @@ from bio import *
 import sys
 from python import os, argparse, random, time
 from index import create_index, load_index
-from assembly import find_candidate_anchors
+from assembly import load_or_generate_candidate_anchors, find_reads_from_candidates
 
 def main():
     system_args = sys.argv[1:]
@@ -15,6 +15,8 @@ def main():
     parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
 
+    parser.add_argument('-c', '--coverage', required=False, help='The known coverage of the experiment')
+
     mode = parser.parse_known_args(system_args)[0].mode
     try:
         if mode == 'query':
@@ -23,7 +25,7 @@ def main():
             parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
             parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
         elif mode == 'index':
-            parser.add_argument('-c', '--coverage', required=False, help='The known coverage of the experiment')
+            pass
 
     except:
         return 0
@@ -54,10 +56,10 @@ def main():
 
     Text = '_'.join(reads)
     print(f"Length of built Text from reads data: {len(Text), ','}")
+    
+    coverage = int(args.coverage)
 
-    if mode == 'index':
-        coverage = int(args.coverage)
-        
+    if mode == 'index':    
         # Index the input file
         create_index(Text, file_path)
 
@@ -106,12 +108,12 @@ def main():
         return 0
 
     elif mode == 'assembly':
-        print("Loading RDI dictionary...")
-        Rdi = load_index(index_path)
-
-        anchors = find_candidate_anchors(Rdi, Text, coverage)
+        anchors = load_or_generate_candidate_anchors(Text, coverage, file_path)
         print("Found " + str(len(anchors)) + " anchor(s):")
-        for (p, l, r) in anchors:
-            print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
+        
+        find_reads_from_candidates(Text, anchors, file_path)
+        
+        # for (p, l, r) in anchors:
+        #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
 main()

@@ -1,6 +1,7 @@
 import pickle
 import gzip
 
+# TODO pass the extension to the constructor.
 class RdiArchive[T]:
 
 	def write(self, object: T, original_filename: str, extension: str):

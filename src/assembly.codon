@@ -1,5 +1,12 @@
-from python import tqdm
+from bio import *
+from python import tqdm, json
+
 import openmp as omp
+
+from index import load_index
+from archive import RdiArchive
+
+CANDIDATE_ANCHORS_RDI_EXT = '.cdt.rdi'
 
 def generate_anchor_queries(coverage: int, length: int) -> List[Tuple[int, int]]:
     dl = 2
@@ -9,7 +16,9 @@ def generate_anchor_queries(coverage: int, length: int) -> List[Tuple[int, int]]
 
     return [(l, c) for l in ls for c in cs]
 
-def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], Text: str, coverage: int):
+def find_candidate_anchors(Text: str, coverage: int, file_path: str):
+    Rdi = load_index(file_path)
+
     target_length = 15 # Tune this later.
     anchors = List[Tuple[int, int, int]]()
 
@@ -41,3 +50,55 @@ def find_candidate_anchors(Rdi: Dict[int, Dict[int, List[int]]], Text: str, cove
 
     progress.close()
     return anchors
+
+
+# Loads a set of candidate anchors from disk
+def load_candidate_anchors(file_path) -> List[Tuple[int, int, int]]:
+    archive = RdiArchive[List[Tuple[int, int, int]]]()
+    return archive.load(file_path, CANDIDATE_ANCHORS_RDI_EXT)
+
+# Writes a set of candiate anchors to disk
+def write_candidate_anchors(anchors, file_path):
+    print('Saving candidate anchors to disk...')
+    archive = RdiArchive[List[Tuple[int, int, int]]]()
+    archive.write(anchors, file_path, CANDIDATE_ANCHORS_RDI_EXT)
+
+def load_or_generate_candidate_anchors(Text: str, coverage: int, file_path: str):
+    try:
+        # Check if candidate anchors are generated.
+        anchors = load_candidate_anchors(file_path)
+        print("[debug] Loaded candidate anchors from file successfully")
+        return anchors
+
+    except:
+        # Cannot read anchors from disk. Build the anchor set.
+        print("[debug] Failed to load candiate anchors.")
+        anchors = find_candidate_anchors(Text, coverage, file_path)
+
+        # Save the candidate anchors to disk
+        write_candidate_anchors(anchors, file_path)
+
+        return anchors
+
+def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], file_path):
+    anchor_reads = Dict[str, List[str]]({})
+
+    for (p, l, r) in anchors:
+        anchor_sequence = Text[p:p+l]
+        anchor_reads[anchor_sequence] = List[str]([])
+
+    # Iterate over reads
+    for read in FASTQ(file_path):
+        read_sequence = str(read.seq).upper()
+        for anchor_sequence in anchor_reads:
+            if (anchor_sequence in read_sequence):
+                anchor_reads[anchor_sequence].append(read_sequence)
+
+    avg = 0
+
+    for x in anchor_reads:
+        avg += len(anchor_reads[x])
+        print(f'{x}: {str(len(anchor_reads[x]))}')
+
+    print(f'Average read count: {str(avg / len(anchor_reads))}')
+    
