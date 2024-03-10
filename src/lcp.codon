@@ -3,7 +3,8 @@ from archive import RdiArchive
 LCP_RDI_EXT = '.lcp.rdi'
 
 # Builds an LCP array.
-# TODO give type annotyation to n
+# TODO give type annotation to `n`
+# TODO add tqdm to this method
 def build_lcp_array(Text: str, n, suffix_array: List[Int[32]]) -> List[int]:
     print("Building LCP array...")
 

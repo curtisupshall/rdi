@@ -2,7 +2,7 @@ from bio import *
 import sys
 from python import os, argparse, random, time
 from index import create_index, load_index
-from query import find_candidate_anchors
+from assembly import find_candidate_anchors
 
 def main():
     system_args = sys.argv[1:]
@@ -86,6 +86,7 @@ def main():
         start_time = time.time()
 
         # Query the index
+        # TODO this searching logic should really be in its own function in query.codon
         for query in queries:
             (l, r) = query
             # rs = Rdi.find(l)
@@ -104,14 +105,13 @@ def main():
         print(f'> Ran {len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
         return 0
 
-    # elif mode == 'assembly':
-    #     print("Loading RDI dictionary...")
-    #     Rdi = load_index(index_path)
-    #     # Rdi = {}
+    elif mode == 'assembly':
+        print("Loading RDI dictionary...")
+        Rdi = load_index(index_path)
 
-    #     anchors = find_candidate_anchors(Rdi, Text, coverage)
-    #     print("Found " + str(len(anchors)) + " anchor(s):")
-    #     for (p, l, r) in anchors:
-    #         print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
+        anchors = find_candidate_anchors(Rdi, Text, coverage)
+        print("Found " + str(len(anchors)) + " anchor(s):")
+        for (p, l, r) in anchors:
+            print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
 main()
