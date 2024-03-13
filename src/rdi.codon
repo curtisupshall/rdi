@@ -1,8 +1,8 @@
 from bio import *
 import sys
 from python import os, argparse, random, time
-from index import create_index, write_dictionary
-from query import load_index, find_candidate_anchors
+from index import create_index, load_index
+from assembly import load_or_generate_candidate_anchors, find_reads_from_candidates
 
 def main():
     system_args = sys.argv[1:]
@@ -14,7 +14,9 @@ def main():
 
     parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
-    parser.add_argument('--reference', required=True, help='The reference genome')
+
+    parser.add_argument('-c', '--coverage', required=False, help='The known coverage of the experiment')
+    parser.add_argument('-o', '--overwrite', action='store_true', required=False, help='Ignore loading checkpoint files')
 
     mode = parser.parse_known_args(system_args)[0].mode
     try:
@@ -24,7 +26,7 @@ def main():
             parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
             parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
         elif mode == 'index':
-            parser.add_argument('-b', '--benchmark', help='Number of iterations for a benchmark file')
+            pass
 
     except:
         return 0
@@ -35,72 +37,38 @@ def main():
         return 0
 
     file_path = args.file_path
-    reference_file_path = args.reference
     mode = args.mode
 
     # Check if file actually exists
     if not os.path.exists(file_path):
         print(f'No file was found at {file_path}. Exiting.')
         return 0
-    
-    # Check if reference file actually exists
-    if not os.path.exists(file_path):
-        print(f'No reference fiel was found at {reference_file_path}. Exiting.')
-        return 0
 
-    index_path = f'{file_path}.rdi'
     Text = ''
 
     reads = list()
-    num_base_pairs = 0
-    reference_length = -1
 
     print("Reading file...")
-    for read in SAM(file_path):
-        num_base_pairs = num_base_pairs + len(read.seq)
+    for read in FASTQ(file_path):
+        # num_base_pairs = num_base_pairs + len(read.seq)
         reads.append(str(read.seq).upper())
 
-    print("Num base pairs: " + str(num_base_pairs))
-    
-    print ("Reading reference genome...")
-    for read in FASTA(reference_file_path, fai=False, validate=False, gzip=False):
-        reference_length = len(read.seq)
-        break
-
-    print("Reference genome length: " + str(reference_length))
-
-    coverage = int(num_base_pairs // reference_length)
-    print("Approximate coverage: " + str(coverage))
-
-    # sys.exit()
-
     Text = '_'.join(reads)
-    print("Length of built Text from reads data: " + str(len(Text)))
+    print(f"Length of built Text from reads data: {len(Text), ','}")
+    
+    coverage = int(args.coverage)
 
-    if mode == 'index':
+    if mode == 'index':    
         # Index the input file
-        index = create_index(Text, index_path)
+        create_index(Text, file_path)
 
-        if args.benchmark:
-            with open(f'{file_path}.rdibench', 'w') as f:
-                pass
-                # for _ in range(int(args.benchmark)):
-                #     l = random.choice(ls)
-                #     r = random.choice(rs)
-                #     f.write(f'{l} {r}\n')
-
-        write_dictionary(index, index_path)
         print('\bDone.')
         return 0
 
     elif mode == 'query':
-        # Check if the index has been build
-        if not os.path.exists(index_path):
-            print(f'No RDI index was found for {file_path}. You can build an index by running:\n\t./rdi index {file_path}\n')
-            return 0
 
         # Build btree
-        Rdi = load_index(index_path)
+        Rdi = load_index(file_path)
         queries = List[Tuple[int, int]]([])
         
         # Read queries from file/stdin
@@ -119,6 +87,7 @@ def main():
         start_time = time.time()
 
         # Query the index
+        # TODO this searching logic should really be in its own function in query.codon
         for query in queries:
             (l, r) = query
             # rs = Rdi.find(l)
@@ -138,13 +107,12 @@ def main():
         return 0
 
     elif mode == 'assembly':
-        print("Loading RDI dictionary...")
-        Rdi = load_index(index_path)
-        # Rdi = {}
-
-        anchors = find_candidate_anchors(Rdi, Text, coverage)
+        anchors = load_or_generate_candidate_anchors(Text, coverage, file_path, args.overwrite)
         print("Found " + str(len(anchors)) + " anchor(s):")
-        for (p, l, r) in anchors:
-            print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
+        
+        find_reads_from_candidates(Text, anchors, file_path)
+        
+        # for (p, l, r) in anchors:
+        #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
 
 main()

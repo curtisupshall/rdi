@@ -1,3 +1,9 @@
 [submodule "extern/libdivsufsort"]
 	path = extern/libdivsufsort
 	url = https://github.com/y-256/libdivsufsort.git
+[submodule "extern/minimap2"]
+	path = extern/minimap2
+	url = https://github.com/lh3/minimap2
+[submodule "extern/miniasm"]
+	path = extern/miniasm
+	url = https://github.com/lh3/miniasm

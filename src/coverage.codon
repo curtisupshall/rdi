@@ -1,0 +1,62 @@
+
+
+# A script for calculating the coverage of an experiment
+def main():
+    system_args = sys.argv[1:]
+
+    parser = argparse.ArgumentParser(
+        prog='rdi',
+        description='Repeat Detection Index - coverage calculator',
+        )
+
+    parser.add_argument('file_path', help='Path to your sequencing data file')
+    parser.add_argument('--reference', required=True, help='The reference genome')
+
+    except:
+        return 0
+
+    try:
+        args = parser.parse_args(system_args)
+    except:
+        return 0
+
+    file_path = args.file_path
+    reference_file_path = args.reference
+    mode = args.mode
+
+    # Check if file actually exists
+    if not os.path.exists(file_path):
+        print(f'No file was found at {file_path}. Exiting.')
+        return 0
+    
+    # Check if reference file actually exists
+    if not os.path.exists(file_path):
+        print(f'No reference fiel was found at {reference_file_path}. Exiting.')
+        return 0
+
+
+
+    reads = list()
+    num_base_pairs = 0
+    reference_length = -1
+
+    print("Reading file...")
+    for read in FASTQ(file_path):
+        num_base_pairs = num_base_pairs + len(read.seq)
+        reads.append(str(read.seq).upper())
+
+    print("Num base pairs: " + str(num_base_pairs))
+    
+    print ("Reading reference genome...")
+    for read in FASTA(reference_file_path, fai=False, validate=False, gzip=False):
+        reference_length = len(read.seq)
+        break
+
+    print("Reference genome length: " + str(reference_length))
+
+    coverage = int(num_base_pairs // reference_length)
+    print("Approximate coverage: " + str(coverage))
+
+    return 0
+
+main()

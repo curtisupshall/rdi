@@ -1,71 +1,40 @@
+# Seq imports
 from bio import *
-import sys
-# import os
-import datetime
-from python import os, json, argparse, bz2, tqdm
 
+# Codon standard library imports
+import sys
 from threading import Lock
 import openmp as omp
+import datetime
+
+# Python imports
+from python import os, pickle, argparse, bz2, tqdm, psutil
+
+# RDI imports
+from sa import load_or_build_suffix_array
+from lcp import load_or_build_lcp_array
+from archive import RdiArchive
 
 
-LIBDIVSUFSORT="lib/libdivsufsort.so.3"
-from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
+INDEX_RDI_EXT = '.idx.rdi'
 
-def write_dictionary(index, index_path):
-    print(f'Writing "{index_path}"... ')
-    with open('.rdilist', 'a') as f:
-        f.write(f'{index_path}\n')
+def write_index(index, file_path):
+    print(f'Writing index to disk... ')
+    archive = RdiArchive[Dict[int, Dict[int, List[int]]]]()
+    archive.write(index, file_path, INDEX_RDI_EXT)
 
-    with bz2.BZ2File(index_path, 'w') as f:
-        f.write(json.dumps(index).encode('utf-8'))
+def load_index(file_path):
+    print(f'Loading index from disk... ')
+    archive = RdiArchive[Dict[int, Dict[int, List[int]]]]()
+    return archive.load(file_path, INDEX_RDI_EXT)
 
-# Kasai Algorithm
-def build_lcp_array(s: str, n, suffix_array: Ptr[Int[32]]) -> List[int]:
-    lcp = List[int]([0] * (n))
-    rank = List[int]([0] * n)
-    k = 0
-
-    print("Allocating ranks...")
-    for i in range(n):
-        rank[int(suffix_array[i])] = i
-
-    print("Populating LCP array...")
-    for i in range(n):
-        if rank[i] == n - 1:
-            k = 0
-            continue
-        j = int(suffix_array[rank[i] + 1])
-        while i + k < n and j + k < n and s[i + k] == s[j + k]:
-            k += 1
-        lcp[rank[i]] = k
-        if k > 0:
-            k -= 1
-
-    print("Done building LCP array.")
-    return [0] + [0] + lcp + [0]
-
-def build_suffix_array(Text: str, n):
-    SA = Ptr[Int[32]](n)
-    divsufsort(Text.c_str(), SA, n)
-    
-    return SA
-
-def create_index(Text: str, index_path: str):
-    n = len(Text)
-
-    print("Building suffix array...")
-    SA = build_suffix_array(Text, n)
-
-    print("Building LCP array...")
-    LCP = build_lcp_array(Text, n, SA)
-
+def _generate_index(Text: str, n: int, SA, LCP):
     print("Building RDI dictionary.")
 
     dictionary = Dict[int, Dict[int, List[int]]]()
-
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
 
-    @omp.critical
+    # @omp.critical
     def report(p: int, l: int, r: int):
         if l not in dictionary:
             dictionary[l] = dict()
@@ -75,11 +44,11 @@ def create_index(Text: str, index_path: str):
         
         dictionary[l][r].append(p)
 
-    @omp.critical
+    # @omp.critical
     def increment_progress():
         progress.update(1)
 
-    @par(schedule='dynamic', chunk_size=1000, num_threads=24, ordered=False)
+    # @par(schedule='dynamic', chunk_size=65000, num_threads=32, ordered=False)
     for i in range(1, n + 1):
         increment_progress()
         if (LCP[i] < LCP[i + 1]):
@@ -102,13 +71,19 @@ def create_index(Text: str, index_path: str):
                 report(p, l, r)
 
     progress.close()
-
-    del SA
-    del LCP
-
     return dictionary
 
-def show_table(Text, n, SA, LCP):
+def create_index(Text: str, file_path: str):
+    n = len(Text)
+    SA = load_or_build_suffix_array(Text, n, file_path)
+    LCP = load_or_build_lcp_array(Text, n, SA, file_path)
+
+    dictionary = _generate_index(Text, n, SA, LCP)
+
+    write_index(dictionary, file_path)
+    return
+
+def _show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')
     print('i \tSA[i]\tLCP[i]\tT[SA[i]..n]')
     print
