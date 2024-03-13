@@ -28,15 +28,15 @@ def find_candidate_anchors(Text: str, coverage: int, file_path: str):
     print("Querying index for cadidate...")
     progress = tqdm.tqdm(total=len(queries), smoothing=0)
 
-    @omp.critical
+    # @omp.critical
     def report(p: int, l: int, r: int):
         anchors.append((p, l, r))
 
-    @omp.critical
+    # @omp.critical
     def increment_progress():
         progress.update(1)
 
-    @par(schedule='static', chunk_size=100, num_threads=32, ordered=False)
+    # @par(schedule='static', chunk_size=100, num_threads=32, ordered=False)
     for l, r in queries:
         # Find candidate strings using index
         rs = Rdi[l] if l in Rdi else {}
@@ -63,22 +63,24 @@ def write_candidate_anchors(anchors, file_path):
     archive = RdiArchive[List[Tuple[int, int, int]]]()
     archive.write(anchors, file_path, CANDIDATE_ANCHORS_RDI_EXT)
 
-def load_or_generate_candidate_anchors(Text: str, coverage: int, file_path: str):
-    try:
-        # Check if candidate anchors are generated.
-        anchors = load_candidate_anchors(file_path)
-        print("[debug] Loaded candidate anchors from file successfully")
-        return anchors
+def load_or_generate_candidate_anchors(Text: str, coverage: int, file_path: str, overwrite: bool = False):
+    if not overwrite:
+        try:
+            # Check if candidate anchors are generated.
+            anchors = load_candidate_anchors(file_path)
+            print("[debug] Loaded candidate anchors from file successfully")
+            return anchors
 
-    except:
-        # Cannot read anchors from disk. Build the anchor set.
-        print("[debug] Failed to load candiate anchors.")
-        anchors = find_candidate_anchors(Text, coverage, file_path)
+        except:
+            # Cannot read anchors from disk. Build the anchor set.
+            print("[debug] Failed to load candiate anchors.")
 
-        # Save the candidate anchors to disk
-        write_candidate_anchors(anchors, file_path)
+    anchors = find_candidate_anchors(Text, coverage, file_path)
 
-        return anchors
+    # Save the candidate anchors to disk
+    write_candidate_anchors(anchors, file_path)
+
+    return anchors
 
 def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], file_path):
     anchor_reads = Dict[str, List[str]]({})

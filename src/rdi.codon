@@ -16,6 +16,7 @@ def main():
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
 
     parser.add_argument('-c', '--coverage', required=False, help='The known coverage of the experiment')
+    parser.add_argument('-o', '--overwrite', action='store_true', required=False, help='Ignore loading checkpoint files')
 
     mode = parser.parse_known_args(system_args)[0].mode
     try:
@@ -108,7 +109,7 @@ def main():
         return 0
 
     elif mode == 'assembly':
-        anchors = load_or_generate_candidate_anchors(Text, coverage, file_path)
+        anchors = load_or_generate_candidate_anchors(Text, coverage, file_path, args.overwrite)
         print("Found " + str(len(anchors)) + " anchor(s):")
         
         find_reads_from_candidates(Text, anchors, file_path)
