@@ -28,17 +28,10 @@ def load_index(file_path):
     archive = RdiArchive[Dict[int, Dict[int, List[int]]]]()
     return archive.load(file_path, INDEX_RDI_EXT)
 
-def create_index(Text: str, file_path: str):
-    n = len(Text)
-
-    SA = load_or_build_suffix_array(Text, n, file_path)
-
-    LCP = load_or_build_lcp_array(Text, n, SA, file_path)
-
+def _generate_index(Text: str, n: int, SA, LCP):
     print("Building RDI dictionary.")
 
     dictionary = Dict[int, Dict[int, List[int]]]()
-
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
 
     # @omp.critical
@@ -78,20 +71,17 @@ def create_index(Text: str, file_path: str):
                 report(p, l, r)
 
     progress.close()
+    return dictionary
 
-    available_memory = psutil.virtual_memory().available
-    print(f"Available memory before: {available_memory} bytes")
+def create_index(Text: str, file_path: str):
+    n = len(Text)
+    SA = load_or_build_suffix_array(Text, n, file_path)
+    LCP = load_or_build_lcp_array(Text, n, SA, file_path)
 
-
-    del SA
-    del LCP
-
-    available_memory = psutil.virtual_memory().available
-    print(f"Available memory before: {available_memory} bytes")
+    dictionary = _generate_index(Text, n, SA, LCP)
 
     write_index(dictionary, file_path)
-
-    return dictionary
+    return
 
 def _show_table(Text, n, SA, LCP):
     print('---- Table 1 ----\n')

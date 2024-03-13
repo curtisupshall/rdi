@@ -37,24 +37,16 @@ def main():
         return 0
 
     file_path = args.file_path
-    reference_file_path = args.reference
     mode = args.mode
 
     # Check if file actually exists
     if not os.path.exists(file_path):
         print(f'No file was found at {file_path}. Exiting.')
         return 0
-    
-    # Check if reference file actually exists
-    if not os.path.exists(file_path):
-        print(f'No reference fiel was found at {reference_file_path}. Exiting.')
-        return 0
 
     Text = ''
 
     reads = list()
-    # num_base_pairs = 0
-    reference_length = -1
 
     print("Reading file...")
     for read in FASTQ(file_path):
