@@ -1,13 +1,8 @@
 from bio import *
 import sys
 from python import os, argparse, random, time
-<<<<<<< HEAD
 from index import create_index, load_index
 from assembly import load_or_generate_candidate_anchors, find_reads_from_candidates
-=======
-from index import create_index, write_dictionary
-from query import load_index, find_candidate_anchors
->>>>>>> master
 
 def main():
     system_args = sys.argv[1:]
@@ -19,13 +14,9 @@ def main():
 
     parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
-<<<<<<< HEAD
 
     parser.add_argument('-c', '--coverage', required=False, help='The known coverage of the experiment')
     parser.add_argument('-o', '--overwrite', action='store_true', required=False, help='Ignore loading checkpoint files')
-=======
-    parser.add_argument('--reference', required=True, help='The reference genome')
->>>>>>> master
 
     mode = parser.parse_known_args(system_args)[0].mode
     try:
@@ -124,7 +115,6 @@ def main():
         return 0
 
     elif mode == 'assembly':
-<<<<<<< HEAD
         anchors = load_or_generate_candidate_anchors(Text, coverage, file_path, args.overwrite)
         print("Found " + str(len(anchors)) + " anchor(s):")
         
@@ -132,15 +122,5 @@ def main():
         
         # for (p, l, r) in anchors:
         #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
-=======
-        print("Loading RDI dictionary...")
-        Rdi = load_index(index_path)
-        # Rdi = {}
-
-        anchors = find_candidate_anchors(Rdi, Text, coverage)
-        print("Found " + str(len(anchors)) + " anchor(s):")
-        for (p, l, r) in anchors:
-            print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
->>>>>>> master
 
 main()
