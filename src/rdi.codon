@@ -15,7 +15,7 @@ def main():
     parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
     parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
 
-    parser.add_argument('-c', '--coverage', required=False, help='The known coverage of the experiment')
+    parser.add_argument('-c', '--coverage', required=True, help='The known coverage of the experiment')
     parser.add_argument('-o', '--overwrite', action='store_true', required=False, help='Ignore loading checkpoint files')
 
     mode = parser.parse_known_args(system_args)[0].mode
@@ -27,6 +27,10 @@ def main():
             parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
         elif mode == 'index':
             pass
+        elif mode == 'assembly':
+            parser.add_argument('--lmin', required=True, help='The minimum length for candidate anchors')
+            parser.add_argument('--lmax', required=True, help='The maximum length for candidate anchors')
+            parser.add_argument('-a', required=True, help='The coverage delta')
 
     except:
         return 0
@@ -107,7 +111,11 @@ def main():
         return 0
 
     elif mode == 'assembly':
-        anchors = load_or_generate_candidate_anchors(Text, coverage, file_path, args.overwrite)
+        lmin = int(args.lmin)
+        lmax = int(args.lmax)
+        a = int(args.a)
+
+        anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path, args.overwrite)
         print("Found " + str(len(anchors)) + " anchor(s):")
         
         find_reads_from_candidates(Text, anchors, file_path)

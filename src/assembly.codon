@@ -8,24 +8,21 @@ from archive import RdiArchive
 
 CANDIDATE_ANCHORS_RDI_EXT = '.cdt.rdi'
 
-def generate_anchor_queries(coverage: int, length: int) -> List[Tuple[int, int]]:
-    dl = 2
-    dc = int(coverage // 10)
-    ls = [length] + [l for i in range(1, dl + 1) for l in (length + i, length - i)]
-    cs = [coverage] + [c for i in range(1, dc + 1) for c in (coverage + i, coverage - i)]
+def generate_anchor_queries(coverage: int, lmin: int, lmax: int, a: int) -> List[Tuple[int, int]]:
+
+    ls = [l for l in range(lmin, lmax + 1)]
+    cs = [c for c in range(coverage - a, coverage + a + 1)]
 
     return [(l, c) for l in ls for c in cs]
 
-def find_candidate_anchors(Text: str, coverage: int, file_path: str):
+def find_candidate_anchors(Text: str, coverage: int, lmin: int, lmax: int, a: int, file_path: str):
     Rdi = load_index(file_path)
 
-    target_length = 15 # Tune this later.
-    anchors = List[Tuple[int, int, int]]()
-
     print("Generating anchor queries...")
-    queries = generate_anchor_queries(coverage, target_length)
+    queries = generate_anchor_queries(coverage, lmin, lmax, a)
     
     print("Querying index for cadidate...")
+    anchors = List[Tuple[int, int, int]]()
     progress = tqdm.tqdm(total=len(queries), smoothing=0)
 
     # @omp.critical
@@ -63,7 +60,7 @@ def write_candidate_anchors(anchors, file_path):
     archive = RdiArchive[List[Tuple[int, int, int]]]()
     archive.write(anchors, file_path, CANDIDATE_ANCHORS_RDI_EXT)
 
-def load_or_generate_candidate_anchors(Text: str, coverage: int, file_path: str, overwrite: bool = False):
+def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax: int, a: int, file_path: str, overwrite: bool = False):
     if not overwrite:
         try:
             # Check if candidate anchors are generated.
@@ -75,7 +72,7 @@ def load_or_generate_candidate_anchors(Text: str, coverage: int, file_path: str,
             # Cannot read anchors from disk. Build the anchor set.
             print("[debug] Failed to load candiate anchors.")
 
-    anchors = find_candidate_anchors(Text, coverage, file_path)
+    anchors = find_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
 
     # Save the candidate anchors to disk
     write_candidate_anchors(anchors, file_path)
@@ -100,7 +97,7 @@ def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], f
 
     for x in anchor_reads:
         avg += len(anchor_reads[x])
-        print(f'{x}: {str(len(anchor_reads[x]))}')
+        # print(f'{x}: {str(len(anchor_reads[x]))}')
 
     print(f'Average read count: {str(avg / len(anchor_reads))}')
     
