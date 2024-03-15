@@ -5,6 +5,7 @@ import openmp as omp
 
 from index import load_index
 from archive import RdiArchive
+from align import semiglobal
 
 CANDIDATE_ANCHORS_RDI_EXT = '.cdt.rdi'
 
@@ -80,6 +81,7 @@ def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax
     return anchors
 
 def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], file_path):
+    print(f"Collecting reads from {str(len(anchors))} anchors...")
     anchor_reads = Dict[str, List[seq]]({})
 
     for (p, l, r) in anchors:
@@ -102,16 +104,44 @@ def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], f
     return anchor_reads
 
 def bin_reads(anchor_reads: Dict[str, List[seq]], alignment_threshold):
-    contigs = List()
+    print("Binning reads...")
+    total_reads = sum(len(reads) for reads in anchor_reads.values())
+    
+    progress = tqdm.tqdm(total=total_reads, smoothing=0)
+
+    contigs = List[List[seq]]()
+    
     for anchor, reads in anchor_reads.items():
-        bins = List()
         for read in reads:
-            
+            if len(contigs) == 0:
+                contigs.append(List[seq]([read]))
+            else:
+                for contig in contigs:
+                    meets_threshold = True
+                    for contig_read in contig:
+                        score = semiglobal(str(read), str(contig_read))
+                        if score > alignment_threshold:
+                            meets_threshold = False
+                            break
+                    
+                    if meets_threshold:
+                        contig.append(read)
+            progress.update(1)
+    
+    progress.close()
+    return contigs
+        
+                
 
     
 def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: int, a: int):
     anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
-    print("Found " + str(len(anchors)) + " anchor(s)")
-
     anchor_reads = find_reads_from_candidates(Text, anchors, file_path)
-    bin_reads(anchor_reads, -1)
+    
+    contigs = bin_reads(anchor_reads, 10)
+    print(contigs)
+    # for contig in contigs:
+    #     for read in contig:
+    #         semiglobal(str(read), str(contig[0]), True)
+            
+    #     break
