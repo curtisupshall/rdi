@@ -11,3 +11,5 @@ data/chr22.fa
 **/*.rdi
 .rdilist
 *.rdibench
+
+src/align.codon

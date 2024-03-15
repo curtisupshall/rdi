@@ -2,7 +2,7 @@ from bio import *
 import sys
 from python import os, argparse, random, time
 from index import create_index, load_index
-from assembly import load_or_generate_candidate_anchors, find_reads_from_candidates
+from assembly import perform_assembly
 
 def main():
     system_args = sys.argv[1:]
@@ -115,10 +115,7 @@ def main():
         lmax = int(args.lmax)
         a = int(args.a)
 
-        anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path, args.overwrite)
-        print("Found " + str(len(anchors)) + " anchor(s):")
-        
-        find_reads_from_candidates(Text, anchors, file_path)
+        perform_assembly(Text, file_path, coverage, lmin, lmax, a)
         
         # for (p, l, r) in anchors:
         #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')

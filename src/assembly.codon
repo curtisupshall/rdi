@@ -80,24 +80,38 @@ def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax
     return anchors
 
 def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], file_path):
-    anchor_reads = Dict[str, List[str]]({})
+    anchor_reads = Dict[str, List[seq]]({})
 
     for (p, l, r) in anchors:
         anchor_sequence = Text[p:p+l]
-        anchor_reads[anchor_sequence] = List[str]([])
+        anchor_reads[anchor_sequence] = List[seq]([])
 
     # Iterate over reads
     for read in FASTQ(file_path):
-        read_sequence = str(read.seq).upper()
         for anchor_sequence in anchor_reads:
-            if (anchor_sequence in read_sequence):
-                anchor_reads[anchor_sequence].append(read_sequence)
+            if (anchor_sequence in str(read.seq).upper()):
+                anchor_reads[anchor_sequence].append(read.seq)
 
-    avg = 0
+    # avg = 0
 
-    for x in anchor_reads:
-        avg += len(anchor_reads[x])
-        # print(f'{x}: {str(len(anchor_reads[x]))}')
+    # for x in anchor_reads:
+    #     avg += len(anchor_reads[x])
+    #     # print(f'{x}: {str(len(anchor_reads[x]))}')
 
-    print(f'Average read count: {str(avg / len(anchor_reads))}')
+    # print(f'Average read count: {str(avg / len(anchor_reads))}')
+    return anchor_reads
+
+def bin_reads(anchor_reads: Dict[str, List[seq]], alignment_threshold):
+    contigs = List()
+    for anchor, reads in anchor_reads.items():
+        bins = List()
+        for read in reads:
+            
+
     
+def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: int, a: int):
+    anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
+    print("Found " + str(len(anchors)) + " anchor(s)")
+
+    anchor_reads = find_reads_from_candidates(Text, anchors, file_path)
+    bin_reads(anchor_reads, -1)
