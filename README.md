@@ -3,7 +3,7 @@
 </p>
 
 # 🧬 rdi
-Repeat Detection Index is an index for finding repeated substrings.
+RDI (Repeat Detection Index) is a Codon library used to build an index for finding repeated substrings. RDI leverages this index to peform de novo genome assembly.
 
 ## 0. Prerequisites
  1. [Codon](https://docs.exaloop.io/codon/) **(with Python >=3.8 interoperability enabled)** and [Seq](https://docs.seq-lang.org/):
