@@ -1,0 +1,27 @@
+from bio import *
+
+def basepair_mode(basepairs: List[seq]) -> seq:
+    A = 0
+    C = 0
+    G = 0
+    T = 0
+
+    for basepair in basepairs:
+        match basepair:
+            case 'A': A += 1
+            case 'C': C += 1
+            case 'G': G += 1
+            case 'T': T += 1
+            case _: continue
+            
+    max_count = max([A, C, G, T])
+
+    if max_count == A:
+        return s'A'
+    if max_count == C:
+        return s'C'
+    if max_count == G:
+        return s'G'
+    if max_count == T:
+        return s'T'
+

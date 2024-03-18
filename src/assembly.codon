@@ -1,13 +1,15 @@
 from bio import *
 from python import tqdm, json
+import sys
 
 import openmp as omp
 
 from index import load_index
 from archive import RdiArchive
-from align import semiglobal
+from basecount import basepair_mode
 
 CANDIDATE_ANCHORS_RDI_EXT = '.cdt.rdi'
+ANCHOR_READS_RDI_EXT = '.anrd.rdi'
 
 def generate_anchor_queries(coverage: int, lmin: int, lmax: int, a: int) -> List[Tuple[int, int]]:
 
@@ -55,6 +57,17 @@ def load_candidate_anchors(file_path) -> List[Tuple[int, int, int]]:
     archive = RdiArchive[List[Tuple[int, int, int]]]()
     return archive.load(file_path, CANDIDATE_ANCHORS_RDI_EXT)
 
+# Loads anchor reads from disk
+def load_anchor_reads(file_path) -> Dict[str, List[seq]]:
+    archive = RdiArchive[Dict[str, List[seq]]]()
+    return archive.load(file_path, ANCHOR_READS_RDI_EXT)
+
+# Writes anchor reads to disk
+def write_anchor_reads(anchor_reads, file_path):
+    print('Saving anchor reads to disk...')
+    archive = RdiArchive[Dict[str, List[seq]]]()
+    archive.write(anchor_reads, file_path, ANCHOR_READS_RDI_EXT)
+
 # Writes a set of candiate anchors to disk
 def write_candidate_anchors(anchors, file_path):
     print('Saving candidate anchors to disk...')
@@ -80,8 +93,19 @@ def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax
 
     return anchors
 
-def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], file_path):
+def find_or_load_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], file_path):
+    try:
+        # Check if candidate anchors are generated.
+        anchor_reads = load_anchor_reads(file_path)
+        print("[debug] Loaded anchors reads from file successfully")
+        return anchor_reads
+
+    except:
+        # Cannot read anchors from disk. Build the anchor set.
+        print("[debug] Failed to load anchor reads.")
+
     print(f"Collecting reads from {str(len(anchors))} anchors...")
+    # TODO the anchor should be type seq, not str
     anchor_reads = Dict[str, List[seq]]({})
 
     for (p, l, r) in anchors:
@@ -98,37 +122,53 @@ def find_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], f
 
     # for x in anchor_reads:
     #     avg += len(anchor_reads[x])
-    #     # print(f'{x}: {str(len(anchor_reads[x]))}')
+    #     print(f'{x}: {str(len(anchor_reads[x]))}')
 
     # print(f'Average read count: {str(avg / len(anchor_reads))}')
+    
+    write_anchor_reads(anchor_reads, file_path)
+
     return anchor_reads
 
-def bin_reads(anchor_reads: Dict[str, List[seq]], alignment_threshold):
-    print("Binning reads...")
-    total_reads = sum(len(reads) for reads in anchor_reads.values())
-    
-    progress = tqdm.tqdm(total=total_reads, smoothing=0)
+def generate_contigs(anchor, reads):
+    print(f"Generating contigs for {anchor}...")
 
     contigs = List[List[seq]]()
+
+    # start_indices = [str(read).index(str(anchor)) for read in reads]
+    # max_start = max(start_indices)
+
+    xs = Dict()
+    num_reads = len(reads)
+    consensus_min_size = num_reads / 2
+
+    # Iterate over all reads
+    for read in reads:
+        # Determine how many base pairs appear before the anchor occurs
+        start_index = str(read).index(str(anchor))
+        # Iterate over all the base pairs that appear before the anchor
+        for i in range(start_index):
+            # Calculate index relative to anchor
+            relative_index = i - start_index
+
+            # Record consensus
+            if relative_index not in xs:
+                xs[relative_index] = List()                
+            xs[relative_index].append(read[i])
+            
+    consensus_bp = List[seq](anchor)
     
-    for anchor, reads in anchor_reads.items():
-        for read in reads:
-            if len(contigs) == 0:
-                contigs.append(List[seq]([read]))
-            else:
-                for contig in contigs:
-                    meets_threshold = True
-                    for contig_read in contig:
-                        score = semiglobal(str(read), str(contig_read))
-                        if score > alignment_threshold:
-                            meets_threshold = False
-                            break
-                    
-                    if meets_threshold:
-                        contig.append(read)
-            progress.update(1)
+    for _relative_index, basepairs in sorted(xs.items(), reverse=True):
+        if len(basepairs) < consensus_min_size:
+            continue
+        consensus_bp.insert(0, basepair_mode(basepairs))
+        
+    print(consensus_bp)
+        
+            
     
-    progress.close()
+            
+
     return contigs
         
                 
@@ -136,10 +176,20 @@ def bin_reads(anchor_reads: Dict[str, List[seq]], alignment_threshold):
     
 def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: int, a: int):
     anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
-    anchor_reads = find_reads_from_candidates(Text, anchors, file_path)
-    
-    contigs = bin_reads(anchor_reads, 10)
-    print(contigs)
+    anchor_reads = find_or_load_reads_from_candidates(Text, anchors, file_path)
+
+    # progress = tqdm.tqdm(total=len(reads), smoothing=0)
+
+    x = 0
+    for anchor, reads in anchor_reads.items():
+        # TODO remove seq constructor once the anchor is changed from type string to type seq
+        generate_contigs(seq(anchor), reads)
+        x += 1
+        if (x > 0):
+            return
+
+    # contigs = bin_reads(anchor_reads, 10)
+    # print(contigs)
     # for contig in contigs:
     #     for read in contig:
     #         semiglobal(str(read), str(contig[0]), True)
