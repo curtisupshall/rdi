@@ -1,6 +1,6 @@
 from bio import *
 
-def basepair_mode(basepairs: List[seq]) -> seq:
+def basepair_mode(basepairs: List[seq]) -> str:
     A = 0
     C = 0
     G = 0
@@ -17,11 +17,11 @@ def basepair_mode(basepairs: List[seq]) -> seq:
     max_count = max([A, C, G, T])
 
     if max_count == A:
-        return s'A'
+        return 'A'
     if max_count == C:
-        return s'C'
+        return 'C'
     if max_count == G:
-        return s'G'
+        return 'G'
     if max_count == T:
-        return s'T'
+        return 'T'
 
