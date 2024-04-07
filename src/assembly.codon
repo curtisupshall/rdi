@@ -212,7 +212,7 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
         
         # Hack to only run one loop for testing purposes
         x += 1
-        if (x > 1):
+        if (x > 0):
             return
 
     # contigs = bin_reads(anchor_reads, 10)
