@@ -130,6 +130,57 @@ def find_or_load_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, 
 
     return anchor_reads
 
+# Generates a contig based on an anchor string and a list of reads which all contain the anchor string.
+def generate_contig(anchor, reads):
+    print(f"Generating contig for {anchor} ...")
+    
+    # Step 1: Find the maximum prefix length before the anchor and the maximum suffix length after the
+    # anchor, along with their corresponding reads.
+    max_prefix_length = -1
+    max_suffix_length = -1
+    # max_prefix_read = ""
+    # max_suffix_read = ""
+
+    for read in reads:
+        start_index = str(read).index(anchor)
+        suffix_length = len(read) - (start_index + len(anchor))
+
+        if start_index > max_prefix_length:
+            max_prefix_length = start_index
+            # max_prefix_read = str(read)
+            
+        if suffix_length > max_suffix_length:
+            max_suffix_length = suffix_length
+            # max_suffix_read = str(read)
+
+    # Allocate consensus array
+    # consensus_length = max_prefix_length + len(anchor) +  max_suffix_length
+    # consensus = __array__[List[int]](consensus_length)
+    
+    consensus = [List[str]() for _ in range(max_prefix_length + len(anchor) +  max_suffix_length)]
+
+    for read in reads:
+        # Determine how many base pairs appear before the anchor occurs
+        start_index = str(read).index(str(anchor))
+
+        # Determine the index of the basepair immediately after the anchor
+        end_index = start_index + len(anchor)
+
+        
+        # For this read, iterate over all the base pairs that appear before the
+        # anchor, relative to the longest prefix among all the reads
+        relative_consensus_index = max_prefix_length - start_index
+        for i in range(start_index):
+            consensus[relative_consensus_index + i].append(str(read)[i])
+            
+        # Next, iterate over all the base pairs that appear after the anchor,
+        # relative to the longest suffix among all the reads
+        # relative_consensus_index = max_prefix_length - start_index
+
+        for i in range(start_index):
+            consensus[relative_consensus_index + i].append(str(read)[i])
+
+
 def generate_contigs(anchor, reads):
     print(f"Generating contigs for {anchor} ...")
 
@@ -146,7 +197,7 @@ def generate_contigs(anchor, reads):
         # Determine how many base pairs appear before the anchor occurs
         start_index = str(read).index(str(anchor))
         
-        # Determine how many base pairs appear after the anchor occurs
+        # Determine the index of the basepair immediately after the anchor
         end_index = start_index + len(anchor)
         
         # Iterate over all the base pairs that appear before the anchor
@@ -159,7 +210,7 @@ def generate_contigs(anchor, reads):
                 prefix_consensus[relative_index] = List()                
             prefix_consensus[relative_index].append(read[i])
             
-        # Iterate over all the base pairs that appear aftere the anchor
+        # Iterate over all the base pairs that appear after the anchor
         for i in range(end_index, len(read)):
             # Record consensus
             
@@ -171,7 +222,7 @@ def generate_contigs(anchor, reads):
     # Construct consensus contig
     consensus_contig = str()
     
-    # Append prefix
+    # Prepend prefix
     for _, basepairs in sorted(prefix_consensus.items(), reverse=False):
         if len(basepairs) < consensus_min_size:
             # There is not enough coverage at this position in the contig to draw consensus.
@@ -207,9 +258,9 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
 
     x = 0
     for anchor, reads in anchor_reads.items():
-        # TODO remove seq constructor once the anchor is changed from type string to type seq
-        generate_contigs(seq(anchor), reads)
-        
+
+        generate_contig(str(anchor), reads)
+
         # Hack to only run one loop for testing purposes
         x += 1
         if (x > 0):
