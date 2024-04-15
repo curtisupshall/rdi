@@ -133,52 +133,52 @@ def find_or_load_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, 
 # Generates a contig based on an anchor string and a list of reads which all contain the anchor string.
 def generate_contig(anchor, reads):
     print(f"Generating contig for {anchor} ...")
-    
-    # Step 1: Find the maximum prefix length before the anchor and the maximum suffix length after the
-    # anchor, along with their corresponding reads.
-    max_prefix_length = -1
-    max_suffix_length = -1
+    anchor_length = len(anchor)
+
+    contig_prefix_length = -1
+    contig_suffix_length = -1
     # max_prefix_read = ""
     # max_suffix_read = ""
 
+    # Step 1: Find the maximum prefix length before the anchor and the maximum suffix length after the
+    # anchor, along with their corresponding reads.
     for read in reads:
         start_index = str(read).index(anchor)
         suffix_length = len(read) - (start_index + len(anchor))
 
-        if start_index > max_prefix_length:
-            max_prefix_length = start_index
+        if start_index > contig_prefix_length:
+            contig_prefix_length = start_index
             # max_prefix_read = str(read)
             
-        if suffix_length > max_suffix_length:
-            max_suffix_length = suffix_length
+        if suffix_length > contig_suffix_length:
+            contig_suffix_length = suffix_length
             # max_suffix_read = str(read)
 
     # Allocate consensus array
-    # consensus_length = max_prefix_length + len(anchor) +  max_suffix_length
+    # consensus_length = contig_prefix_length + len(anchor) +  contig_suffix_length
     # consensus = __array__[List[int]](consensus_length)
-    
-    consensus = [List[str]() for _ in range(max_prefix_length + len(anchor) +  max_suffix_length)]
+
+    consensus = [List[str]() for _ in range(contig_prefix_length + len(anchor) +  contig_suffix_length)]
 
     for read in reads:
-        # Determine how many base pairs appear before the anchor occurs
-        start_index = str(read).index(str(anchor))
+        # print(read)
 
-        # Determine the index of the basepair immediately after the anchor
-        end_index = start_index + len(anchor)
+        # For this read, determine how many base pairs appear before the anchor occurs
+        read_prefix_length = str(read).index(str(anchor))
 
-        
-        # For this read, iterate over all the base pairs that appear before the
-        # anchor, relative to the longest prefix among all the reads
-        relative_consensus_index = max_prefix_length - start_index
-        for i in range(start_index):
+        # For this read, iterate over all the base pairs that appear before the anchor
+        relative_consensus_index = contig_prefix_length - read_prefix_length
+        for i in range(read_prefix_length):
             consensus[relative_consensus_index + i].append(str(read)[i])
             
-        # Next, iterate over all the base pairs that appear after the anchor,
-        # relative to the longest suffix among all the reads
-        # relative_consensus_index = max_prefix_length - start_index
-
-        for i in range(start_index):
-            consensus[relative_consensus_index + i].append(str(read)[i])
+        # Next, iterate over all the base pairs that appear after the anchor
+        read_suffix_start_index = read_prefix_length + anchor_length
+        read_suffix_length = len(read) - read_suffix_start_index
+        relative_consensus_index = contig_prefix_length + anchor_length
+        for i in range(read_suffix_length):
+            consensus[relative_consensus_index + i].append(str(read)[read_suffix_start_index + i])
+            
+    print(consensus)
 
 
 def generate_contigs(anchor, reads):
@@ -213,7 +213,7 @@ def generate_contigs(anchor, reads):
         # Iterate over all the base pairs that appear after the anchor
         for i in range(end_index, len(read)):
             # Record consensus
-            
+
             relative_index = i - end_index # + 1 ???
             if relative_index not in suffix_consensus:
                 suffix_consensus[relative_index] = List()                
