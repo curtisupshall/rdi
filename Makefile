@@ -19,6 +19,9 @@ rdi:
 dev:
 	codon build -plugin seq src/rdi.codon -o rdi
 
+assembly:
+	./rdi assembly data/SRR15652545.fastq --lmin 14 --lmax 18 -a 200 -c 2929
+
 btree:
 	codon run -plugin seq src/btree.codon
 

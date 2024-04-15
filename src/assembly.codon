@@ -130,6 +130,27 @@ def find_or_load_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, 
 
     return anchor_reads
 
+def get_basepair_statistics(position_bases) -> Tuple[str, float]:
+    base_map = { 'A': 0, 'C': 0, 'G': 0, 'T': 0 }
+    for base in position_bases:
+        base_map[base] += 1
+
+    total_sum = sum(base_map.values())
+    if (total_sum == 0):
+        return ('N', 0.00)
+    
+    max_key = 'N'
+    max_value = -float('inf')  # Initialize to negative infinity
+    for key, value in base_map.items():
+        if value > max_value:
+            max_value = value
+            max_key = key
+
+    proportion = max_value / total_sum
+    return (max_key, proportion)
+
+
+
 # Generates a contig based on an anchor string and a list of reads which all contain the anchor string.
 def generate_contig(anchor, reads):
     print(f"Generating contig for {anchor} ...")
@@ -137,8 +158,6 @@ def generate_contig(anchor, reads):
 
     contig_prefix_length = -1
     contig_suffix_length = -1
-    # max_prefix_read = ""
-    # max_suffix_read = ""
 
     # Step 1: Find the maximum prefix length before the anchor and the maximum suffix length after the
     # anchor, along with their corresponding reads.
@@ -148,21 +167,14 @@ def generate_contig(anchor, reads):
 
         if start_index > contig_prefix_length:
             contig_prefix_length = start_index
-            # max_prefix_read = str(read)
             
         if suffix_length > contig_suffix_length:
             contig_suffix_length = suffix_length
-            # max_suffix_read = str(read)
 
     # Allocate consensus array
-    # consensus_length = contig_prefix_length + len(anchor) +  contig_suffix_length
-    # consensus = __array__[List[int]](consensus_length)
-
     consensus = [List[str]() for _ in range(contig_prefix_length + len(anchor) +  contig_suffix_length)]
 
     for read in reads:
-        # print(read)
-
         # For this read, determine how many base pairs appear before the anchor occurs
         read_prefix_length = str(read).index(str(anchor))
 
@@ -177,78 +189,14 @@ def generate_contig(anchor, reads):
         relative_consensus_index = contig_prefix_length + anchor_length
         for i in range(read_suffix_length):
             consensus[relative_consensus_index + i].append(str(read)[read_suffix_start_index + i])
-            
-    print(consensus)
+
+    contig = List[str]([])
+    for index, position_basepairs in enumerate(consensus):
+        (base, popularity) = get_basepair_statistics(position_basepairs)
+        print(f'{base} (position {index}, popularity: {str(popularity)} among {len(position_basepairs)} reads)')
 
 
-def generate_contigs(anchor, reads):
-    print(f"Generating contigs for {anchor} ...")
-
-    contigs = List[List[seq]]()
-
-    prefix_consensus = Dict()
-    suffix_consensus = Dict()
-
-    num_reads = len(reads)
-    consensus_min_size = 0.99 * num_reads
-
-    # Iterate over all reads
-    for read in reads:
-        # Determine how many base pairs appear before the anchor occurs
-        start_index = str(read).index(str(anchor))
-        
-        # Determine the index of the basepair immediately after the anchor
-        end_index = start_index + len(anchor)
-        
-        # Iterate over all the base pairs that appear before the anchor
-        for i in range(start_index):
-            # Calculate index relative to anchor
-            relative_index = i - start_index
-
-            # Record consensus
-            if relative_index not in prefix_consensus:
-                prefix_consensus[relative_index] = List()                
-            prefix_consensus[relative_index].append(read[i])
-            
-        # Iterate over all the base pairs that appear after the anchor
-        for i in range(end_index, len(read)):
-            # Record consensus
-
-            relative_index = i - end_index # + 1 ???
-            if relative_index not in suffix_consensus:
-                suffix_consensus[relative_index] = List()                
-            suffix_consensus[relative_index].append(read[i])
-
-    # Construct consensus contig
-    consensus_contig = str()
-    
-    # Prepend prefix
-    for _, basepairs in sorted(prefix_consensus.items(), reverse=False):
-        if len(basepairs) < consensus_min_size:
-            # There is not enough coverage at this position in the contig to draw consensus.
-            continue
-
-        consensus_contig += basepair_mode(basepairs)
-    
-    # Append anchor
-    consensus_contig += str(anchor)
-    
-    # Append suffix
-    for _, basepairs in sorted(suffix_consensus.items(), reverse=False):
-        if len(basepairs) < consensus_min_size:
-            # There is not enough coverage at this position in the contig to draw consensus.
-            continue
-
-        consensus_contig += basepair_mode(basepairs)
-
-    print('Consensus contig:')
-    print(consensus_contig)
-        
-
-    return contigs
-        
                 
-
     
 def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: int, a: int):
     anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
@@ -256,20 +204,7 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
 
     # progress = tqdm.tqdm(total=len(reads), smoothing=0)
 
-    x = 0
     for anchor, reads in anchor_reads.items():
-
         generate_contig(str(anchor), reads)
+        break # Debug
 
-        # Hack to only run one loop for testing purposes
-        x += 1
-        if (x > 0):
-            return
-
-    # contigs = bin_reads(anchor_reads, 10)
-    # print(contigs)
-    # for contig in contigs:
-    #     for read in contig:
-    #         semiglobal(str(read), str(contig[0]), True)
-            
-    #     break

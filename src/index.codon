@@ -8,7 +8,7 @@ import openmp as omp
 import datetime
 
 # Python imports
-from python import os, pickle, argparse, bz2, tqdm, psutil
+from python import os, pickle, argparse, bz2, tqdm
 
 # RDI imports
 from sa import load_or_build_suffix_array
