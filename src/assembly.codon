@@ -90,6 +90,9 @@ def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax
 
     # Save the candidate anchors to disk
     write_candidate_anchors(anchors, file_path)
+    
+    print(f"Found {len(anchors)} candidate anchors:")
+    print(anchors)
 
     return anchors
 
