@@ -191,9 +191,18 @@ def generate_contig(anchor, reads):
             consensus[relative_consensus_index + i].append(str(read)[read_suffix_start_index + i])
 
     contig = List[str]([])
+    sum_popularity = 0.0
+    num_reads_meeting_threshold = 0
     for index, position_basepairs in enumerate(consensus):
         (base, popularity) = get_basepair_statistics(position_basepairs)
-        print(f'{base} (position {index}, popularity: {str(popularity)} among {len(position_basepairs)} reads)')
+        if (len(position_basepairs) > 50):
+            sum_popularity += popularity
+            num_reads_meeting_threshold += 1
+        # print(f'{base} (position {index}, popularity: {str(popularity)} among {len(position_basepairs)} reads)')
+    
+    average_popularity = sum_popularity / num_reads_meeting_threshold
+    # print(f'num_reads_meeting_threshold: {str(num_reads_meeting_threshold)}')
+    print(f'Average popularity: {str(average_popularity)}')
 
 
                 
@@ -206,5 +215,5 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
 
     for anchor, reads in anchor_reads.items():
         generate_contig(str(anchor), reads)
-        break # Debug
+        # break # Debug
 
