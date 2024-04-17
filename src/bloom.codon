@@ -1,0 +1,62 @@
+import sys
+from bio import *
+
+# Get file from terminal
+file_name = str(sys.argv[1]).strip()
+threshold = int(sys.argv[2])
+
+M = 1048576
+K = 3
+
+def murmur(key, seed):
+    m, r = 0xc6a4a7935bd1e995, 47
+    h = seed ^ (8 * m)
+    k = int(key.as_int()) * m
+    k ^= k >> r; k *= m
+    h ^= k
+    h *= m; h ^= h >> r
+    h *= m; h ^= h >> r
+    return h
+
+class BloomFilter:
+    __filter: Dict[int, int]
+    m: int
+    k: int
+
+    def __init__(self, m, k):
+        self.m = m
+        self.k = k
+        # Initialize the bloom filter
+        self.__filter = Dict[int, int]()
+        for i in range(m):
+            self.__filter[i] = 0
+
+    def add(self, kmer) -> int:
+        estimate_occurrences = float('inf')
+
+        for j in range(self.k):
+            index = murmur(kmer, j) % self.m
+            self.__filter[index] += 1
+            if (self.__filter[index] < estimate_occurrences):
+                estimate_occurrences = self.__filter[index]
+
+        return int(estimate_occurrences)
+            
+
+
+def main():
+    bloom = BloomFilter(M, K)
+    threshold_kmers = Dict[Kmer[30], int]()
+
+    # Open FASTQ file
+    for read in FASTA(file_name, fai=False, validate=False, gzip=False):
+        for thirtymer in read.seq.kmers(k=30, step=1):
+            estimate_occurrences = bloom.add(thirtymer)
+            if estimate_occurrences > threshold:
+                threshold_kmers[thirtymer] = estimate_occurrences
+    
+    sorted_kmers = sorted(threshold_kmers.items(), key=lambda x: x[1], reverse=True)
+    for kmer, count in sorted_kmers:
+        print(f"{count} {kmer}")
+
+main()

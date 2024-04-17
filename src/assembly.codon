@@ -5,6 +5,7 @@ import sys
 import openmp as omp
 
 from index import load_index
+from jaccard import similarity
 from archive import RdiArchive
 from basecount import basepair_mode
 
@@ -133,7 +134,8 @@ def find_or_load_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, 
 
     return anchor_reads
 
-def get_basepair_statistics(position_bases) -> Tuple[str, float]:
+# Debug function.
+def _get_basepair_statistics(position_bases) -> Tuple[str, float]:
     base_map = { 'A': 0, 'C': 0, 'G': 0, 'T': 0 }
     for base in position_bases:
         base_map[base] += 1
@@ -152,6 +154,25 @@ def get_basepair_statistics(position_bases) -> Tuple[str, float]:
     proportion = max_value / total_sum
     return (max_key, proportion)
 
+def cluster_reads(reads: List[seq]):
+    print(f"Clustering {str(len(reads))} reads...")
+    similarity_threshold = 0.025
+    read_clusters: List[List[seq]] = List([List([reads[0]])])
+    for read in reads[1:]:
+        cluster_index = -1
+        greatest_similarity = -1.0
+        for index, cluster in enumerate(read_clusters):
+            similarity_index = similarity(read, cluster[0])
+            if similarity_index > similarity_threshold and similarity_index > greatest_similarity:
+                cluster_index = index
+                greatest_similarity = similarity_index
+        
+        if cluster_index == -1:
+            read_clusters.append(List([read]))
+        else:
+            read_clusters[cluster_index].append(read)
+
+    return read_clusters
 
 
 # Generates a contig based on an anchor string and a list of reads which all contain the anchor string.
@@ -194,19 +215,11 @@ def generate_contig(anchor, reads):
             consensus[relative_consensus_index + i].append(str(read)[read_suffix_start_index + i])
 
     contig = List[str]([])
-    sum_popularity = 0.0
-    num_reads_meeting_threshold = 0
-    for index, position_basepairs in enumerate(consensus):
-        (base, popularity) = get_basepair_statistics(position_basepairs)
-        if (len(position_basepairs) > 50):
-            sum_popularity += popularity
-            num_reads_meeting_threshold += 1
-        # print(f'{base} (position {index}, popularity: {str(popularity)} among {len(position_basepairs)} reads)')
-    
-    average_popularity = sum_popularity / num_reads_meeting_threshold
-    # print(f'num_reads_meeting_threshold: {str(num_reads_meeting_threshold)}')
-    print(f'Average popularity: {str(average_popularity)}')
 
+    for index, position_basepairs in enumerate(consensus):
+        (modal_base, popularity) = _get_basepair_statistics(position_basepairs)
+        print(f'{base} (position {index}, popularity: {str(popularity)} among {len(position_basepairs)} reads)')
+    
 
                 
     
@@ -217,6 +230,20 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
     # progress = tqdm.tqdm(total=len(reads), smoothing=0)
 
     for anchor, reads in anchor_reads.items():
-        generate_contig(str(anchor), reads)
+        read_clusters = cluster_reads(reads)
+        print(f'Num reads: {str(len(reads))}')
+        print(f'Num clusters: {str(len(read_clusters))}')
+
+        i = 1
+        print(f"{i}th cluster for anchor {anchor}:")
+        
+        for read in read_clusters[i]:
+            print(f'{str(read)}')
+
+        break
+        # TODO
+        # for read_cluster in cluster_reads(reads):
+        #     generate_contig(str(anchor), read_cluster)
+        #     break # Debug
         # break # Debug
 
