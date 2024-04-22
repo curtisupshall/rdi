@@ -11,6 +11,7 @@ from basecount import basepair_mode
 
 CANDIDATE_ANCHORS_RDI_EXT = '.cdt.rdi'
 ANCHOR_READS_RDI_EXT = '.anrd.rdi'
+CONTIGS_RDI_EXT = '.contigs.rdi'
 
 def generate_anchor_queries(coverage: int, lmin: int, lmax: int, a: int) -> List[Tuple[int, int]]:
 
@@ -74,6 +75,12 @@ def write_candidate_anchors(anchors, file_path):
     print('Saving candidate anchors to disk...')
     archive = RdiArchive[List[Tuple[int, int, int]]]()
     archive.write(anchors, file_path, CANDIDATE_ANCHORS_RDI_EXT)
+
+# Writes a set of contigs to disk
+def write_contigs(contigs, file_path):
+    print('Saving contigs to disk...')
+    archive = RdiArchive[List[str]]()
+    archive.write(contigs, file_path, CONTIGS_RDI_EXT)
 
 def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax: int, a: int, file_path: str, overwrite: bool = False):
     if not overwrite:
@@ -176,7 +183,7 @@ def cluster_reads(reads: List[seq]):
 
 # Generates a contig based on an anchor string and a list of reads which all contain the anchor string.
 def generate_contig(anchor, reads):
-    print(f"Generating contig for {str(len(reads))} reads ...")
+    # print(f"Generating contig for {str(len(reads))} reads ...")
     anchor_length = len(anchor)
 
     contig_prefix_length = -1
@@ -235,12 +242,11 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
     anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
     anchor_reads = find_or_load_reads_from_candidates(Text, anchors, file_path)
 
-    # progress = tqdm.tqdm(total=len(reads), smoothing=0)
-
     contigs = []
 
-    for anchor, reads in anchor_reads.items():
-        print(f"Clustering {str(len(reads))} reads for anchor {anchor}...")
+    for index, (anchor, reads) in enumerate(anchor_reads.items()):
+        print(f"Clustering {str(len(reads))} reads for anchor {anchor} ({index + 1} / {len(anchor_reads)})...")
+        
         read_clusters = cluster_reads(reads)
         
         # print(f'Num reads: {str(len(reads))}')
@@ -259,8 +265,9 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
             # print(contig)
             # break # Debug
         # break # Debug
+        
 
     print(f"Num contigs: {str(len(contigs))}")
-    print(contigs)
-
+    
+    write_contigs(contigs, file_path)
 
