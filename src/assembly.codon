@@ -163,7 +163,9 @@ def _get_basepair_statistics(position_bases) -> Tuple[str, float]:
 
 def cluster_reads(reads: List[seq]):
     similarity_threshold = 0.0025
+
     read_clusters: List[List[seq]] = List([List([reads[0]])])
+
     for read in reads[1:]:
         cluster_index = -1
         greatest_similarity = -1.0
@@ -259,7 +261,7 @@ def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: 
 
         # break
         
-        for read_cluster in cluster_reads(reads):
+        for read_cluster in read_clusters:
             contigs.append(generate_contig(str(anchor), read_cluster))
             # print('The Contig:')
             # print(contig)

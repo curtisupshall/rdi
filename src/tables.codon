@@ -1,0 +1,8 @@
+def _show_table(Text, n, SA, LCP):
+    print('---- Table 1 ----\n')
+    print('i \tSA[i]\tLCP[i]\tT[SA[i]..n]')
+    print
+    for i in range(n + 1):
+        sa_index = int(SA[i])
+        print(f'{i}\t{sa_index}\t{LCP[i]}\t{Text[sa_index:n]}$')
+

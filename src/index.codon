@@ -28,6 +28,8 @@ def load_index(file_path):
     archive = RdiArchive[Dict[int, Dict[int, List[int]]]]()
     return archive.load(file_path, INDEX_RDI_EXT)
 
+# Generates a string repeat index, based on the given text, its length,
+# the suffix array of the text, and the LCP array of the text.
 def _generate_index(Text: str, n: int, SA, LCP):
     print("Building RDI dictionary.")
 
@@ -82,13 +84,3 @@ def create_index(Text: str, file_path: str):
 
     write_index(dictionary, file_path)
     return
-
-def _show_table(Text, n, SA, LCP):
-    print('---- Table 1 ----\n')
-    print('i \tSA[i]\tLCP[i]\tT[SA[i]..n]')
-    print
-    for i in range(n + 1):
-        sa_index = int(SA[i])
-        print(f'{i}\t{sa_index}\t{LCP[i]}\t{Text[sa_index:n]}$')
-
-
