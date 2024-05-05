@@ -8,7 +8,7 @@ import openmp as omp
 import datetime
 
 # Python imports
-from python import os, pickle, argparse, bz2, tqdm
+from python import os, pickle, argparse, bz2, tqdm, alive_progress
 
 # RDI imports
 from sa import load_or_build_suffix_array
@@ -31,46 +31,51 @@ def load_index(file_path):
 # Generates a string repeat index, based on the given text, its length,
 # the suffix array of the text, and the LCP array of the text.
 def _generate_index(Text: str, n: int, SA, LCP):
+    CHUNK_SIZE = 2 ** 12
+    # CHUNK_SIZE = 2 ** 13
+
     print("Building RDI dictionary.")
 
     dictionary = Dict[int, Dict[int, List[int]]]()
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
 
-    # @omp.critical
-    def report(p: int, l: int, r: int):
-        if l not in dictionary:
-            dictionary[l] = dict()
-        
-        if r not in dictionary[l]:
-            dictionary[l][r] = list()
-        
-        dictionary[l][r].append(p)
+    @omp.critical
+    def report(records: List[Tuple[int, int, int, int]]):
+        # progress.update(i - progress.n)
+        progress.update(CHUNK_SIZE)
 
-    # @omp.critical
-    def increment_progress():
-        progress.update(1)
+        for i, p, l, r in records:
+            if l not in dictionary:
+                dictionary[l] = dict()
+            
+            if r not in dictionary[l]:
+                dictionary[l][r] = list()
+            
+            dictionary[l][r].append(p)
 
-    # @par(schedule='dynamic', chunk_size=65000, num_threads=32, ordered=False)
-    for i in range(1, n + 1):
-        increment_progress()
-        if (LCP[i] < LCP[i + 1]):
-            for k in range(LCP[i] + 1, LCP[i + 1] + 1):            
-                # Calculate j > i is the minimum value such that LCP[j] < LCP[i + 1]
-                j_min = -1
+    @par(schedule='dynamic', num_threads=2, ordered=True)
+    for x in range(1, n + 1, CHUNK_SIZE):
+        records = list()
 
-                for j in range(i + 1, n + 2):
-                    if (LCP[j] < k):
-                        j_min = j
-                        break
+        for i in range(x, min(x + CHUNK_SIZE - 1, n) + 1):
+            if (LCP[i] < LCP[i + 1]):
+                for k in range(LCP[i] + 1, LCP[i + 1] + 1):            
+                    # Calculate j > i as the minimum value such that LCP[j] < LCP[i + 1]
+                    j = i + 1
+                    while j <= n + 1:
+                        if (LCP[j] < k):
+                            break
+                        j += 1
 
-                if j <= i:
-                    continue
+                    l: int = k           # Length of the string
+                    r: int = j - i       # Number of occurrences
 
-                p: int = int(SA[i])      # Position in the text
-                l: int = k               # Length of the string
-                r: int = j_min - i       # Number of occurrences
+                    p: int = int(SA[i])  # Position in the text
 
-                report(p, l, r)
+                    # report([(i, p, l, r)])
+                    records.append((i, p, l, r))
+
+        report(records)
 
     progress.close()
     return dictionary
