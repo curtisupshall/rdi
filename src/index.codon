@@ -40,11 +40,11 @@ def _generate_index(Text: str, n: int, SA, LCP):
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
 
     @omp.critical
-    def report(records: List[Tuple[int, int, int, int]]):
+    def report(records: List[Tuple[int, int, int]]):
         # progress.update(i - progress.n)
         progress.update(CHUNK_SIZE)
 
-        for i, p, l, r in records:
+        for p, l, r in records:
             if l not in dictionary:
                 dictionary[l] = dict()
             
@@ -72,8 +72,7 @@ def _generate_index(Text: str, n: int, SA, LCP):
 
                     p: int = int(SA[i])  # Position in the text
 
-                    # report([(i, p, l, r)])
-                    records.append((i, p, l, r))
+                    records.append((p, l, r))
 
         report(records)
 
