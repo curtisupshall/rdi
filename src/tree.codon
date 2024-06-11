@@ -43,7 +43,7 @@ class TreeNode[T]:
     def deserialize(body):
         raise Exception('Not implemented.')
     
-class Btree[T]:
+class BinaryTree[T]:
     root: Optional[TreeNode[T]] = None
 
     def __init__(self):
