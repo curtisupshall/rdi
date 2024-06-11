@@ -42,8 +42,9 @@ class TreeNode[T]:
     @staticmethod
     def deserialize(body):
         raise Exception('Not implemented.')
-    
+
 class BinaryTree[T]:
+    # TODO change this to a pointer
     root: Optional[TreeNode[T]] = None
 
     def __init__(self):

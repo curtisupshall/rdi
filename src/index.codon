@@ -17,6 +17,7 @@ from archive import RdiArchive
 
 
 INDEX_RDI_EXT = '.idx.rdi'
+KMER_LENGTH = 12
 
 def write_index(index, file_path):
     print(f'Writing index to disk... ')
@@ -65,14 +66,16 @@ def _generate_index(Text: str, n: int, SA, LCP):
                     while j <= n + 1:
                         if (LCP[j] < k):
                             break
-                        j += 1
+                        j += 1      
 
-                    l: int = k           # Length of the string
-                    r: int = j - i       # Number of occurrences
-
-                    p: int = int(SA[i])  # Position in the text
+                    l: int = k                  # Length of the string
+                    r: int = j - i              # Number of occurrences
+                    p: int = int(SA[i])         # Arbitrary appearance position in the text
 
                     records.append((p, l, r))
+
+                    if l == KMER_LENGTH:
+                        ps: List[int] = [int(p) for p in SA[i:r]]
 
         report(records)
 

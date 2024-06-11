@@ -1,0 +1,26 @@
+from bio import *
+
+class ReadCollection:
+    text: str = ''
+    reads: BinaryTree[FASTQRecord]
+    
+    def __init__(self):
+        self.text = ''
+        self.reads = []
+        
+    def add_read(read: FASTQRecord):
+        start_position = len(text)
+        text += f'{str(read.seq).upper()}_'
+
+    
+    def report_kmer(k: int, ps: List[int]):
+        for p in ps:
+            n = root_node
+            while True:
+                if p >= n.key:
+                    if p + k <= n.key + len(n.value.seq):
+                        pass # kmer belongs to the read at n
+                    else:
+                        n = n.right
+                else:
+                    n = n.left

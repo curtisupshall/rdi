@@ -58,7 +58,6 @@ def main():
         reads.append(str(read.seq).upper())
 
     Text = '_'.join(reads)
-    # print(f"Length of built Text from reads data: {len(Text), ','}")
     
     coverage = int(args.coverage)
 
@@ -70,8 +69,6 @@ def main():
         return 0
 
     elif mode == 'query':
-
-        # Build btree
         Rdi = load_index(file_path)
         queries = List[Tuple[int, int]]([])
         
