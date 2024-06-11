@@ -64,9 +64,16 @@ class TreeNode[T]:
 class BalancedBinarySearchTree[T]:
     root: Optional[TreeNode[T]] = None
 
-    def __init__(self, key: int = None, value: T = None):
-        if key is not None and value is not None:
-            self.root = TreeNode[T](key, value)
+    # def __init__(self, key: int = None, value: T = None):
+    #     if key is not None and value is not None:
+    #         self.root = TreeNode[T](key, value)
+
+    def __init__(self):
+        self.root = None
+    
+    def __init__(self, key: int, value: T):
+        self.root = TreeNode[T](key, value)
+
 
     def __repr__(self):
         return str(self.root)
