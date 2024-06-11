@@ -8,7 +8,7 @@ import openmp as omp
 import datetime
 
 # Python imports
-from python import os, pickle, argparse, bz2, tqdm, alive_progress
+from python import os, pickle, argparse, bz2, tqdm
 
 # RDI imports
 from sa import load_or_build_suffix_array
@@ -54,7 +54,7 @@ def _generate_index(Text: str, n: int, SA, LCP):
             
             dictionary[l][r].append(p)
 
-    @par(schedule='dynamic', num_threads=2, ordered=True)
+    # @par(schedule='dynamic', num_threads=2, ordered=True)
     for x in range(1, n + 1, CHUNK_SIZE):
         records = list()
 
@@ -74,8 +74,8 @@ def _generate_index(Text: str, n: int, SA, LCP):
 
                     records.append((p, l, r))
 
-                    if l == KMER_LENGTH:
-                        ps: List[int] = [int(p) for p in SA[i:r]]
+                    # if l == KMER_LENGTH:
+                    #     ps: List[int] = [int(p) for p in SA[i:r]]
 
         report(records)
 

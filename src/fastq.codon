@@ -1,0 +1,30 @@
+from bio import *
+from tree import BalancedBinarySearchTree
+
+class ReadCollection:
+    text: str
+    reads: BalancedBinarySearchTree[FASTQRecord]
+    
+    def __init__(self):
+        self.text = ''
+        self.reads = BalancedBinarySearchTree[FASTQRecord]()
+        return
+
+    def add_read(self, read: FASTQRecord):
+        return
+        start_position = len(self.text)
+        self.text += f'{str(read.seq).upper()}_'
+        self.reads.insert(key=start_position, value=read)
+    
+    def report_kmer(self, k: int, ps: List[int]):
+        for p in ps:
+            n = self.reads.root
+            while n:
+                if p >= n.key:
+                    if p + k <= n.key + len(n.value.seq):
+                        pass # kmer belongs to the read at n
+                    else:
+                        n = n.right
+                else:
+                    n = n.left
+

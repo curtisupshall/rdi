@@ -3,6 +3,7 @@ import sys
 from python import os, argparse, random, time
 from index import create_index, load_index
 from assembly import perform_assembly
+from fastq import ReadCollection
 
 def main():
     system_args = sys.argv[1:]
@@ -51,13 +52,20 @@ def main():
     Text = ''
 
     reads = list()
+    coll = ReadCollection()
 
     print("Reading file...")
     for read in FASTQ(file_path):
         # num_base_pairs = num_base_pairs + len(read.seq)
         reads.append(str(read.seq).upper())
+        coll.add_read(read)
+
+    
+    
 
     Text = '_'.join(reads)
+    
+    sys.exit()
     
     coverage = int(args.coverage)
 
@@ -71,7 +79,7 @@ def main():
     elif mode == 'query':
         Rdi = load_index(file_path)
         queries = List[Tuple[int, int]]([])
-        
+
         # Read queries from file/stdin
         if args.input:
             with open(args.input, 'r') as f:
