@@ -1,14 +1,19 @@
 from bio import *
 
+@tuple
+class Read:
+    position: int
+    record: FASTQRecord
+
 class ReadCollection:
     text: str
     text_length: int
-    reads: List[Tuple[int, FASTQRecord]]
-    
+    reads: List[Read]
+
     def __init__(self):
         self.text = ''
         self.text_length = 0
-        self.reads = List[Tuple[int, FASTQRecord]]()
+        self.reads = List[Read]()
         return
 
     def add_read(self, read: FASTQRecord):
@@ -19,14 +24,24 @@ class ReadCollection:
         return
     
     def report_kmer(self, k: int, ps: List[int]):
+        # Iterate over all positions for a given kmer of length k
         for p in ps:
-            n = self.reads.root
-            while n:
-                if p >= n.key:
-                    if p + k <= n.key + len(n.value.seq):
+            # Perform a binary search on the read data
+
+            low = 0
+            high = len(self.reads) - 1
+
+            while low <= high:
+                mid = (low + high) // 2 # integer division
+                pivot = self.reads[mid]
+
+                if p >= pivot.position:
+                    if p + k <= pivot.position + len(pivot.record.seq):
                         pass # kmer belongs to the read at n
                     else:
-                        n = n.right
+                        low = mid + 1
                 else:
-                    n = n.left
+                    high = mid - 1
+
+                # return None # Nothing found                
 
