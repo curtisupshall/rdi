@@ -50,16 +50,7 @@ def main():
         print(f'No file was found at {file_path}. Exiting.')
         return 0
 
-    collection = ReadCollection()
-
-    print("Reading file...")
-    progress = tqdm.tqdm(total=132561, smoothing=0)
-    for read in FASTQ(file_path):
-        progress.update(1)
-        collection.add_read(read)
-    progress.close()        
-    print(f'num reads: {str(len(collection.reads))}')
-    collection.text = '_'.join([str(read.seq).upper() for (_, read) in collection.reads])
+    collection = ReadCollection(file_path)
     
     coverage = int(args.coverage)
 

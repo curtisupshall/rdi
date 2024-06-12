@@ -1,4 +1,5 @@
 from bio import *
+from python import tqdm
 
 @tuple
 class Read:
@@ -10,11 +11,27 @@ class ReadCollection:
     text_length: int
     reads: List[Read]
 
-    def __init__(self):
+    def __init__(self: ReadCollection, file_path: str):
         self.text = ''
         self.text_length = 0
-        self.reads = List[Read]()
-        return
+        self.reads = List[Read]([])
+        
+        self._build_collection(file_path)
+    
+    def _build_collection(self: ReadCollection, file_path: str):
+        print("Reading file...")
+        records: List[FASTQRecord] = [record for record in FASTQ(file_path)]
+
+        progress = tqdm.tqdm(total=len(records), smoothing=0)
+
+        for record in records:
+            progress.update(1)
+            self.add_read(record)
+
+        progress.close()        
+        print(f'Building text for {str(len(self.reads))} reads...')
+        seqs = [str(read.record.seq).upper() for read in self.reads]
+        self.text = '_'.join(seqs)
 
     def add_read(self, read: FASTQRecord):
         start_position = self.text_length
@@ -42,6 +59,6 @@ class ReadCollection:
                         low = mid + 1
                 else:
                     high = mid - 1
-
-                # return None # Nothing found                
-
+    
+    def report_anchor(self, anchor: str):
+        pass
