@@ -15,7 +15,6 @@ from archive import RdiArchive
 
 
 INDEX_RDI_EXT = '.idx.rdi'
-KMER_LENGTH = 12
 
 def write_index(index, file_path):
     print(f'Writing index to disk... ')
@@ -27,20 +26,29 @@ def load_index(file_path):
     archive = RdiArchive[Dict[int, Dict[int, List[int]]]]()
     return archive.load(file_path, INDEX_RDI_EXT)
 
-# Generates a string repeat index, based on the given text, its length,
-# the suffix array of the text, and the LCP array of the text.
-def generate_repeat_detection_index(n: int, SA, LCP):
+# Generates a string repeat index, as well as a list of kmers
+def generate_repeat_detection_index(n: int, SA, LCP, k: int):
     CHUNK_SIZE = 2 ** 12
-    # CHUNK_SIZE = 2 ** 13
 
     print("Building RDI dictionary.")
+
+    # Stores a list of kmers in a dictionary. The key i is the index of the
+    # kmer in the suffix array such that SA[i] yields the position in the text
+    # that the kmer appears. The value v is the number of occurrences
+    kmer_counts = Dict[int, int]()
 
     dictionary = Dict[int, Dict[int, List[int]]]()
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
 
+    # Found a kmer. Record the suffix array index i. From i, we can find all
+    # positions in the text for this kmer using
+    # `ps = [int(p) for p in SA[i:r]]`
     @omp.critical
-    def report(records: List[Tuple[int, int, int]]):
-        # progress.update(i - progress.n)
+    def report_kmer(i: int, r: int):
+        kmer_counts[i] = r
+
+    @omp.critical
+    def report_repeat(records: List[Tuple[int, int, int]]):
         progress.update(CHUNK_SIZE)
 
         for p, l, r in records:
@@ -72,11 +80,10 @@ def generate_repeat_detection_index(n: int, SA, LCP):
 
                     records.append((p, l, r))
 
-                    if l == KMER_LENGTH:
-                        ps: List[int] = [int(p) for p in SA[i:r]]
-                        # rdi.report_kmer(KMER_LENGTH, ps)
+                    if l == k:
+                        report_kmer(i, r)
 
-        report(records)
+        report_repeat(records)
 
     progress.close()
     return dictionary

@@ -4,22 +4,41 @@ from sa import load_or_build_suffix_array, build_suffix_array
 from lcp import load_or_build_lcp_array, build_lcp_array
 from index import generate_repeat_detection_index, write_index
 
+DEFAULT_KMER_SIZE = 12
+
 @tuple
 class Read:
     position: int
     record: FASTQRecord
 
 class RepeatDetectonIndex:
+    # The file path pointing to the FASTQ file
     __file_path: str
+    
+    # The suffix array
     __sa: List[Int[32]]
+    
+    # The LCP array
     __lcp: List[int]
+    
+    # The text, built from the reads in the FASTQ file
     __text: str
+    
+    # The length of the text
     __n: int
+    
+    # The size of the kmers that are recorded for assembly
+    __k: int
+    
+    # The list of reads found in the FASTQ file
     __reads: List[Read]
+    
+    # `True` if checkpoints should be used, false otherwise
     __use_checkpoints: bool
 
-    def __init__(self: RepeatDetectonIndex, file_path: str, use_checkpoints=True):
+    def __init__(self: RepeatDetectonIndex, file_path: str, use_checkpoints=True, k=DEFAULT_KMER_SIZE):
         self.__file_path = file_path
+        self.__k = k
         self.__text = ''
         self.__n = 0
         self.__reads = List[Read]([])
@@ -82,7 +101,8 @@ class RepeatDetectonIndex:
         dictionary = generate_repeat_detection_index(
             self.__n,
             self.__sa,
-            self.__lcp
+            self.__lcp,
+            self.__k
         )
 
         if (self.__use_checkpoints):
