@@ -14,10 +14,10 @@ clean:
 	rm -rf rdi data/*.rdi .rdilist
 
 rdi:
-	codon build -release -plugin seq src/rdi.codon -o rdi
+	codon build -release -plugin seq src/main.codon -o rdi
 
 dev:
-	codon build -plugin seq src/rdi.codon -o rdi
+	codon build -plugin seq src/main.codon -o rdi
 
 index_example:
 	./rdi index data/SRR15652545.fastq -c 2929
