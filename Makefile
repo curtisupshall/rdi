@@ -19,14 +19,17 @@ rdi:
 dev:
 	codon build -plugin seq src/rdi.codon -o rdi
 
-assembly:
+index_example:
+	./rdi index data/SRR15652545.fastq -c 2929
+
+assembly_example:
 	./rdi assembly data/SRR15652545.fastq --lmin 14 --lmax 18 -a 200 -c 2929
 
 jaccard:
 	codon run -plugin seq src/jaccard.codon
 
-btree:
-	codon run -plugin seq src/btree.codon
+tree:
+	codon run -plugin seq src/tree.codon
 
 all: submodules libdivsufsort rdi kmer
 

@@ -1,8 +1,10 @@
 from bio import *
 import sys
-from python import os, argparse, random, time
+from python import os, argparse, random, time, tqdm
 from index import create_index, load_index
 from assembly import perform_assembly
+from fastq import ReadCollection
+from random import shuffle
 
 def main():
     system_args = sys.argv[1:]
@@ -48,33 +50,30 @@ def main():
         print(f'No file was found at {file_path}. Exiting.')
         return 0
 
-    Text = ''
-
-    reads = list()
+    collection = ReadCollection()
 
     print("Reading file...")
+    progress = tqdm.tqdm(total=132561, smoothing=0)
     for read in FASTQ(file_path):
-        # num_base_pairs = num_base_pairs + len(read.seq)
-        reads.append(str(read.seq).upper())
-
-    Text = '_'.join(reads)
-    # print(f"Length of built Text from reads data: {len(Text), ','}")
+        progress.update(1)
+        collection.add_read(read)
+    progress.close()        
+    print(f'num reads: {str(len(collection.reads))}')
+    collection.text = '_'.join([str(read.seq).upper() for (_, read) in collection.reads])
     
     coverage = int(args.coverage)
 
     if mode == 'index':    
         # Index the input file
-        create_index(Text, file_path)
+        create_index(collection.text, file_path)
 
         print('\bDone.')
         return 0
 
     elif mode == 'query':
-
-        # Build btree
         Rdi = load_index(file_path)
         queries = List[Tuple[int, int]]([])
-        
+
         # Read queries from file/stdin
         if args.input:
             with open(args.input, 'r') as f:
@@ -100,7 +99,7 @@ def main():
             ps = rs[r] if r in rs else List[int]([])
 
             for p in (ps):
-                print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
+                print(f'[{l}] {collection.text[p:p+l]} ({r}) @{p}')
 
             # Print query statistics
             if args.verbose:
@@ -115,7 +114,7 @@ def main():
         lmax = int(args.lmax)
         a = int(args.a)
 
-        perform_assembly(Text, file_path, coverage, lmin, lmax, a)
+        perform_assembly(collection.text, file_path, coverage, lmin, lmax, a)
         
         # for (p, l, r) in anchors:
         #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')

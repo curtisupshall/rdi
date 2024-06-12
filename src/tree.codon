@@ -1,0 +1,117 @@
+class TreeNode[T]:
+    key: int
+    value: T
+    left: Optional[TreeNode[T]] = None
+    right: Optional[TreeNode[T]] = None
+    height: int = 1  # New attribute for maintaining the height of the tree for balance
+
+    def __init__(self, key: int, value: T):
+        self.key = key
+        self.value = value
+        self.left = None
+        self.right = None
+
+    def __repr__(self):
+        return f'<{self.key}, {self.value}, {self.left}, {self.right}>'
+
+    def update_height(self):
+        self.height = 1 + max(self.left.height if self.left else 0, self.right.height if self.right else 0)
+
+    def balance_factor(self):
+        return (self.left.height if self.left else 0) - (self.right.height if self.right else 0)
+
+    def rotate_left(self):
+        y = self.right
+        self.right = y.left
+        y.left = self
+        self.update_height()
+        y.update_height()
+        return y
+
+    def rotate_right(self):
+        x = self.left
+        self.left = x.right
+        x.right = self
+        self.update_height()
+        x.update_height()
+        return x
+
+    def balance(self):
+        self.update_height()
+        if self.balance_factor() > 1:
+            if self.left.balance_factor() < 0:
+                self.left = self.left.rotate_left()
+            return self.rotate_right()
+        if self.balance_factor() < -1:
+            if self.right.balance_factor() > 0:
+                self.right = self.right.rotate_right()
+            return self.rotate_left()
+        return self
+
+    def child(self, key, value):
+        if key < self.key:
+            if self.left is None:
+                self.left = TreeNode[T](key, value)
+            else:
+                self.left = self.left.child(key, value)
+        else:
+            if self.right is None:
+                self.right = TreeNode[T](key, value)
+            else:
+                self.right = self.right.child(key, value)
+        return self.balance()
+
+class BalancedBinarySearchTree[T]:
+    root: Optional[TreeNode[T]] = None
+
+    # def __init__(self, key: int = None, value: T = None):
+    #     if key is not None and value is not None:
+    #         self.root = TreeNode[T](key, value)
+
+    def __init__(self):
+        self.root = None
+    
+    def __init__(self, key: int, value: T):
+        self.root = TreeNode[T](key, value)
+
+
+    def __repr__(self):
+        return str(self.root)
+
+    def insert(self, key: int, value: T):
+        if self.root is None:
+            self.root = TreeNode[T](key, value)
+        else:
+            self.root = self.root.child(key, value)
+
+    def find(self, key: int) -> Optional[T]:
+        return None if self.root is None else self.root.find(key)
+
+    def find(self, key: int, default: T) -> Optional[T]:
+        result = self.find(key)
+        return result if result is not None else default
+
+class BinaryTree[T]:
+    # TODO change this to a pointer
+    root: Optional[TreeNode[T]] = None
+
+    def __init__(self):
+        self.root = None
+    
+    def __init__(self, key: int, value: T):
+        self.root = TreeNode[T](key, value)
+
+    def __repr__(self):
+        return None if self.root is None else str(self.root)
+    
+    def insert(self, key: int, value: T):
+        if self.root is None:
+            self.root = TreeNode(key, value)
+        else:
+            self.root.child(key, value)
+
+    def find(self, key: int) -> Optional[T]:
+        return None if self.root is None else self.root.find(key)
+
+    def find(self, key: int, default: T) -> Optional[T]:
+        return None if self.root is None else self.root.find(key, default)
