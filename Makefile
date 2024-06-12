@@ -28,8 +28,8 @@ assembly_example:
 jaccard:
 	codon run -plugin seq src/jaccard.codon
 
-btree:
-	codon run -plugin seq src/btree.codon
+tree:
+	codon run -plugin seq src/tree.codon
 
 all: submodules libdivsufsort rdi kmer
 
