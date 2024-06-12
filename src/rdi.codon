@@ -1,0 +1,124 @@
+from bio import *
+from python import tqdm
+from sa import load_or_build_suffix_array, build_suffix_array
+from lcp import load_or_build_lcp_array, build_lcp_array
+from index import generate_repeat_detection_index, write_index
+
+@tuple
+class Read:
+    position: int
+    record: FASTQRecord
+
+class RepeatDetectonIndex:
+    __file_path: str
+    __sa: List[Int[32]]
+    __lcp: List[int]
+    __text: str
+    __n: int
+    __reads: List[Read]
+    __use_checkpoints: bool
+
+    def __init__(self: RepeatDetectonIndex, file_path: str, use_checkpoints=True):
+        self.__file_path = file_path
+        self.__text = ''
+        self.__n = 0
+        self.__reads = List[Read]([])
+        self.__use_checkpoints = use_checkpoints
+        self.__sa = []
+        self.__lcp = []
+        
+        self.__build_collection(file_path)
+    
+    def __build_collection(self: RepeatDetectonIndex, file_path: str):
+        print("Reading file...")
+        records: List[FASTQRecord] = [record for record in FASTQ(file_path)]
+
+        progress = tqdm.tqdm(total=len(records), smoothing=0)
+
+        for record in records:
+            progress.update(1)
+            self.__add_read(record)
+
+        progress.close()    
+        print(f'Building text for {str(len(self.__reads))} reads...')
+        seqs = [str(read.record.seq).upper() for read in self.__reads]
+        self.__text = '_'.join(seqs)
+        
+    def build_suffix_array(self):
+        if self.__use_checkpoints:
+            self.__sa = load_or_build_suffix_array(
+                self.__text,
+                self.__n,
+                self.__file_path
+            )
+        else:
+            self.__sa = build_suffix_array(
+                self.__text,
+                self.__n,
+            )
+        
+    def build_lcp_array(self):
+        if self.__use_checkpoints:
+            self.__lcp = load_or_build_lcp_array(
+                self.__text,
+                self.__n,
+                self.__sa,
+                self.__file_path
+            )
+        else:
+            self.__lcp = build_lcp_array(
+                self.__text,
+                self.__n,
+                self.__sa,
+            )
+        
+    def build_repeat_detection_index(self):
+        if len(self.__sa) == 0:
+            raise ValueError("Cannot build a repeat detection index with an empty suffix array.")
+        
+        if len(self.__lcp) == 0:
+            raise ValueError("Cannot build a repeat detection index with an empty LCP array.")
+
+        dictionary = generate_repeat_detection_index(
+            self.__n,
+            self.__sa,
+            self.__lcp
+        )
+
+        if (self.__use_checkpoints):
+            write_index(dictionary, self.__file_path)
+
+    def __add_read(self, read: FASTQRecord):
+        start_position = self.__n
+        # self.__text += f'{str(read.seq).upper()}_'
+        self.__n += len(read.seq) + 1
+        self.__reads.append((start_position, read))
+        return
+    
+    def __report_kmer(self, k: int, ps: List[int]):
+        # Iterate over all positions for a given kmer of length k
+        for p in ps:
+            # Perform a binary search on the read data
+
+            low = 0
+            high = len(self.__reads) - 1
+
+            while low <= high:
+                mid = (low + high) // 2 # integer division
+                pivot = self.__reads[mid]
+
+                if p >= pivot.position:
+                    if p + k <= pivot.position + len(pivot.record.seq):
+                        print(self.__text[p:p+k])
+                        print(pivot.record.seq)
+                        break
+                    else:
+                        low = mid + 1
+                else:
+                    high = mid - 1
+    
+    def __report_anchor(self, p: int, l: int, r: int):
+        pass
+    
+    def file_path(self) -> str:
+        return self.__file_path

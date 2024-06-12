@@ -1,9 +1,9 @@
 from bio import *
 import sys
 from python import os, argparse, random, time, tqdm
-from index import create_index, load_index
+from index import load_index
 from assembly import perform_assembly
-from fastq import ReadCollection
+from rdi import RepeatDetectonIndex
 from random import shuffle
 
 def main():
@@ -50,13 +50,15 @@ def main():
         print(f'No file was found at {file_path}. Exiting.')
         return 0
 
-    collection = ReadCollection(file_path)
-    
+    rdi = RepeatDetectonIndex(file_path)
+
     coverage = int(args.coverage)
 
     if mode == 'index':    
-        # Index the input file
-        create_index(collection.text, file_path)
+        
+        rdi.build_suffix_array()
+        rdi.build_lcp_array()
+        rdi.build_repeat_detection_index()
 
         print('\bDone.')
         return 0
@@ -90,7 +92,7 @@ def main():
             ps = rs[r] if r in rs else List[int]([])
 
             for p in (ps):
-                print(f'[{l}] {collection.text[p:p+l]} ({r}) @{p}')
+                print(f'[{l}] {rdi.__text[p:p+l]} ({r}) @{p}')
 
             # Print query statistics
             if args.verbose:
@@ -105,7 +107,7 @@ def main():
         lmax = int(args.lmax)
         a = int(args.a)
 
-        perform_assembly(collection.text, file_path, coverage, lmin, lmax, a)
+        perform_assembly(rdi.__text, file_path, coverage, lmin, lmax, a)
         
         # for (p, l, r) in anchors:
         #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')

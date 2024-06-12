@@ -11,8 +11,6 @@ import datetime
 from python import os, pickle, argparse, bz2, tqdm
 
 # RDI imports
-from sa import load_or_build_suffix_array
-from lcp import load_or_build_lcp_array
 from archive import RdiArchive
 
 
@@ -31,7 +29,7 @@ def load_index(file_path):
 
 # Generates a string repeat index, based on the given text, its length,
 # the suffix array of the text, and the LCP array of the text.
-def _generate_index(n: int, SA, LCP):
+def generate_repeat_detection_index(n: int, SA, LCP):
     CHUNK_SIZE = 2 ** 12
     # CHUNK_SIZE = 2 ** 13
 
@@ -76,19 +74,9 @@ def _generate_index(n: int, SA, LCP):
 
                     if l == KMER_LENGTH:
                         ps: List[int] = [int(p) for p in SA[i:r]]
-                        # collection.report_kmer(KMER_LENGTH, ps)
+                        # rdi.report_kmer(KMER_LENGTH, ps)
 
         report(records)
 
     progress.close()
     return dictionary
-
-def create_index(Text: str, file_path: str):
-    n = len(Text)
-    SA = load_or_build_suffix_array(Text, n, file_path)
-    LCP = load_or_build_lcp_array(Text, n, SA, file_path)
-
-    dictionary = _generate_index(n, SA, LCP)
-
-    write_index(dictionary, file_path)
-    return
