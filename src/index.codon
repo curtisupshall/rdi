@@ -86,4 +86,4 @@ def generate_repeat_detection_index(n: int, SA, LCP, k: int):
         report_repeat(records)
 
     progress.close()
-    return dictionary
+    return (dictionary, kmer_counts)

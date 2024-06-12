@@ -63,6 +63,14 @@ class RepeatDetectonIndex:
         seqs = [str(read.record.seq).upper() for read in self.__reads]
         self.__text = '_'.join(seqs)
         
+    def __assert_sa(self):
+        if len(self.__sa) == 0:
+            raise ValueError("Cannot build a repeat detection index with an empty suffix array.")
+
+    def __assert_lcp(self):
+        if len(self.__lcp) == 0:
+            raise ValueError("Cannot build a repeat detection index with an empty LCP array.")
+        
     def build_suffix_array(self):
         if self.__use_checkpoints:
             self.__sa = load_or_build_suffix_array(
@@ -92,13 +100,10 @@ class RepeatDetectonIndex:
             )
         
     def build_repeat_detection_index(self):
-        if len(self.__sa) == 0:
-            raise ValueError("Cannot build a repeat detection index with an empty suffix array.")
-        
-        if len(self.__lcp) == 0:
-            raise ValueError("Cannot build a repeat detection index with an empty LCP array.")
+        self.__assert_sa()
+        self.__assert_lcp()
 
-        dictionary = generate_repeat_detection_index(
+        [dictionary, kmer_counts] = generate_repeat_detection_index(
             self.__n,
             self.__sa,
             self.__lcp,
@@ -107,6 +112,8 @@ class RepeatDetectonIndex:
 
         if (self.__use_checkpoints):
             write_index(dictionary, self.__file_path)
+            
+        self.__report_kmers(kmer_counts)
 
     def __add_read(self, read: FASTQRecord):
         start_position = self.__n
@@ -114,28 +121,32 @@ class RepeatDetectonIndex:
         self.__n += len(read.seq) + 1
         self.__reads.append((start_position, read))
         return
-    
-    def __report_kmer(self, k: int, ps: List[int]):
-        # Iterate over all positions for a given kmer of length k
-        for p in ps:
-            # Perform a binary search on the read data
 
-            low = 0
-            high = len(self.__reads) - 1
+    def __report_kmers(self, kmer_counts: Dict[int, int]):
+        self.__assert_sa()
+        
+        for i, r in kmer_counts.items():
+            ps = [int(p) for p in self.__sa[i:i+r]]
+            # Iterate over all positions for a given kmer of length k
+            for p in ps:
+                # Perform a binary search on the read data
 
-            while low <= high:
-                mid = (low + high) // 2 # integer division
-                pivot = self.__reads[mid]
+                low = 0
+                high = len(self.__reads) - 1
 
-                if p >= pivot.position:
-                    if p + k <= pivot.position + len(pivot.record.seq):
-                        print(self.__text[p:p+k])
-                        print(pivot.record.seq)
-                        break
+                while low <= high:
+                    mid = (low + high) // 2 # integer division
+                    pivot = self.__reads[mid]
+
+                    if p >= pivot.position:
+                        if p + self.__k <= pivot.position + len(pivot.record.seq):
+                            print(self.__text[p:p+self.__k])
+                            print(pivot.record.seq)
+                            break
+                        else:
+                            low = mid + 1
                     else:
-                        low = mid + 1
-                else:
-                    high = mid - 1
+                        high = mid - 1
     
     def __report_anchor(self, p: int, l: int, r: int):
         pass
