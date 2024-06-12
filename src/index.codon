@@ -31,7 +31,7 @@ def load_index(file_path):
 
 # Generates a string repeat index, based on the given text, its length,
 # the suffix array of the text, and the LCP array of the text.
-def _generate_index(Text: str, n: int, SA, LCP):
+def _generate_index(n: int, SA, LCP):
     CHUNK_SIZE = 2 ** 12
     # CHUNK_SIZE = 2 ** 13
 
@@ -74,8 +74,9 @@ def _generate_index(Text: str, n: int, SA, LCP):
 
                     records.append((p, l, r))
 
-                    # if l == KMER_LENGTH:
-                    #     ps: List[int] = [int(p) for p in SA[i:r]]
+                    if l == KMER_LENGTH:
+                        ps: List[int] = [int(p) for p in SA[i:r]]
+                        # collection.report_kmer(KMER_LENGTH, ps)
 
         report(records)
 
@@ -87,7 +88,7 @@ def create_index(Text: str, file_path: str):
     SA = load_or_build_suffix_array(Text, n, file_path)
     LCP = load_or_build_lcp_array(Text, n, SA, file_path)
 
-    dictionary = _generate_index(Text, n, SA, LCP)
+    dictionary = _generate_index(n, SA, LCP)
 
     write_index(dictionary, file_path)
     return

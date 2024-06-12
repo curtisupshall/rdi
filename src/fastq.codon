@@ -54,11 +54,13 @@ class ReadCollection:
 
                 if p >= pivot.position:
                     if p + k <= pivot.position + len(pivot.record.seq):
-                        pass # kmer belongs to the read at n
+                        print(self.text[p:p+k])
+                        print(pivot.record.seq)
+                        break
                     else:
                         low = mid + 1
                 else:
                     high = mid - 1
     
-    def report_anchor(self, anchor: str):
+    def report_anchor(self, p: int, l: int, r: int):
         pass
