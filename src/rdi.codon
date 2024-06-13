@@ -2,7 +2,7 @@ from bio import *
 from python import tqdm
 from sa import load_or_build_suffix_array, build_suffix_array
 from lcp import load_or_build_lcp_array, build_lcp_array
-from index import generate_repeat_detection_index, write_index
+from index import load_or_generate_repeat_detection_index, generate_repeat_detection_index, write_index, write_kmers
 
 DEFAULT_KMER_SIZE = 12
 
@@ -103,7 +103,16 @@ class RepeatDetectonIndex:
         self.__assert_sa()
         self.__assert_lcp()
 
-        [dictionary, kmer_counts] = generate_repeat_detection_index(
+        if self.__use_checkpoints:
+            [dictionary, kmer_counts] = load_or_generate_repeat_detection_index(
+                self.__n,
+                self.__sa,
+                self.__lcp,
+                self.__k,
+                self.__file_path
+            )
+            
+        dictionary, kmer_counts = generate_repeat_detection_index(
             self.__n,
             self.__sa,
             self.__lcp,
@@ -112,6 +121,7 @@ class RepeatDetectonIndex:
 
         if (self.__use_checkpoints):
             write_index(dictionary, self.__file_path)
+            write_kmers(self.__k, kmer_counts, self.__file_path)
             
         self.__report_kmers(kmer_counts)
 
@@ -124,6 +134,7 @@ class RepeatDetectonIndex:
 
     def __report_kmers(self, kmer_counts: Dict[int, int]):
         self.__assert_sa()
+        print(f"Reporting {len(kmer_counts)} kmers...")
         
         for i, r in kmer_counts.items():
             ps = [int(p) for p in self.__sa[i:i+r]]
@@ -140,8 +151,9 @@ class RepeatDetectonIndex:
 
                     if p >= pivot.position:
                         if p + self.__k <= pivot.position + len(pivot.record.seq):
-                            print(self.__text[p:p+self.__k])
-                            print(pivot.record.seq)
+                            # print(self.__text[p:p+self.__k])
+                            # print(pivot.record.seq)
+                            pass
                             break
                         else:
                             low = mid + 1

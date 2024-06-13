@@ -16,6 +16,19 @@ from archive import RdiArchive
 
 INDEX_RDI_EXT = '.idx.rdi'
 
+def get_kmer_rdi_ext(k: int):
+    return f'.{k}mer.rdi'
+
+def write_kmers(k, kmer_counts, file_path):
+    print(f'Writing kmer counts to disk... ')
+    archive = RdiArchive[Dict[int, int]]()
+    archive.write(kmer_counts, file_path, get_kmer_rdi_ext(k))
+    
+def load_kmers(k, file_path):
+    print(f'Loading kmer counts from disk... ')
+    archive = RdiArchive[Dict[int, int]]()
+    return archive.load(file_path, get_kmer_rdi_ext(k))
+
 def write_index(index, file_path):
     print(f'Writing index to disk... ')
     archive = RdiArchive[Dict[int, Dict[int, List[int]]]]()
@@ -87,3 +100,16 @@ def generate_repeat_detection_index(n: int, SA, LCP, k: int):
 
     progress.close()
     return (dictionary, kmer_counts)
+
+def load_or_generate_repeat_detection_index(n: int, SA, LCP, k: int, file_path: str):
+    try:
+        # Check if RDI is already generated.
+        kmer_counts = load_kmers(k, file_path)
+        dictionary = load_index(file_path)
+        print("[debug] Loaded repeat detection index and kmer counts from file successfully")
+        return (dictionary, kmer_counts)
+    
+    except:
+        # Cannot read RDI from disk. Build the RDI.
+        print("[debug] Failed to load repeat detection index.")
+        return generate_repeat_detection_index(n, SA, LCP, k)
