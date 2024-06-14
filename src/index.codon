@@ -16,19 +16,6 @@ from archive import RdiArchive
 
 INDEX_RDI_EXT = '.idx.rdi'
 
-def get_kmer_rdi_ext(k: int):
-    return f'.{k}mer.rdi'
-
-def write_kmers(k, kmer_counts, file_path):
-    print(f'Writing kmer counts to disk... ')
-    archive = RdiArchive[Dict[int, int]]()
-    archive.write(kmer_counts, file_path, get_kmer_rdi_ext(k))
-    
-def load_kmers(k, file_path):
-    print(f'Loading kmer counts from disk... ')
-    archive = RdiArchive[Dict[int, int]]()
-    return archive.load(file_path, get_kmer_rdi_ext(k))
-
 def write_index(index, file_path):
     print(f'Writing index to disk... ')
     archive = RdiArchive[Dict[int, Dict[int, List[int]]]]()
@@ -45,10 +32,11 @@ def generate_repeat_detection_index(n: int, SA, LCP, k: int):
 
     print("Building RDI dictionary.")
 
-    # Stores a list of kmers in a dictionary. The key i is the index of the
-    # kmer in the suffix array such that SA[i] yields the position in the text
-    # that the kmer appears. The value v is the number of occurrences
-    kmer_counts = Dict[int, int]()
+    # Stores a list of kmers in a tuple. The first value of the tuple i is
+    # the index of the kmer in the suffix array such that SA[i] yields the
+    # position in the text that the kmer appears; The second value of the
+    # tuple v is the number of occurrences
+    kmer_counts = List[Tuple[int, int]]()
 
     dictionary = Dict[int, Dict[int, List[int]]]()
     progress = tqdm.tqdm(total=n, smoothing=0, colour='#1ED18B')
@@ -58,7 +46,7 @@ def generate_repeat_detection_index(n: int, SA, LCP, k: int):
     # `ps = [int(p) for p in SA[i:r]]`
     @omp.critical
     def report_kmer(i: int, r: int):
-        kmer_counts[i] = r
+        kmer_counts.append(i, r)
 
     @omp.critical
     def report_repeat(records: List[Tuple[int, int, int]]):
@@ -95,6 +83,8 @@ def generate_repeat_detection_index(n: int, SA, LCP, k: int):
 
                     if l == k:
                         report_kmer(i, r)
+                        
+                    # TODO also should report  any candidate anchors here.
 
         report_repeat(records)
 
@@ -113,3 +103,5 @@ def load_or_generate_repeat_detection_index(n: int, SA, LCP, k: int, file_path: 
         # Cannot read RDI from disk. Build the RDI.
         print("[debug] Failed to load repeat detection index.")
         return generate_repeat_detection_index(n, SA, LCP, k)
+        write_index(dictionary, self.__file_path)
+        write_kmers(self.__k, kmer_counts, self.__file_path)

@@ -98,7 +98,7 @@ class RepeatDetectonIndex:
                 self.__n,
                 self.__sa,
             )
-        
+
     def build_repeat_detection_index(self):
         self.__assert_sa()
         self.__assert_lcp()
@@ -111,19 +111,18 @@ class RepeatDetectonIndex:
                 self.__k,
                 self.__file_path
             )
-            
-        dictionary, kmer_counts = generate_repeat_detection_index(
-            self.__n,
-            self.__sa,
-            self.__lcp,
-            self.__k
-        )
-
-        if (self.__use_checkpoints):
-            write_index(dictionary, self.__file_path)
-            write_kmers(self.__k, kmer_counts, self.__file_path)
+        else:
+            dictionary, kmer_counts = generate_repeat_detection_index(
+                self.__n,
+                self.__sa,
+                self.__lcp,
+                self.__k
+            )            
             
         self.__report_kmers(kmer_counts)
+        
+    def build_contigs():
+        
 
     def __add_read(self, read: FASTQRecord):
         start_position = self.__n
@@ -134,31 +133,8 @@ class RepeatDetectonIndex:
 
     def __report_kmers(self, kmer_counts: Dict[int, int]):
         self.__assert_sa()
-        print(f"Reporting {len(kmer_counts)} kmers...")
         
-        for i, r in kmer_counts.items():
-            ps = [int(p) for p in self.__sa[i:i+r]]
-            # Iterate over all positions for a given kmer of length k
-            for p in ps:
-                # Perform a binary search on the read data
-
-                low = 0
-                high = len(self.__reads) - 1
-
-                while low <= high:
-                    mid = (low + high) // 2 # integer division
-                    pivot = self.__reads[mid]
-
-                    if p >= pivot.position:
-                        if p + self.__k <= pivot.position + len(pivot.record.seq):
-                            # print(self.__text[p:p+self.__k])
-                            # print(pivot.record.seq)
-                            pass
-                            break
-                        else:
-                            low = mid + 1
-                    else:
-                        high = mid - 1
+        pass
     
     def __report_anchor(self, p: int, l: int, r: int):
         pass
