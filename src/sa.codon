@@ -1,12 +1,13 @@
 LIBDIVSUFSORT="lib/libdivsufsort.so.3"
 from C import LIBDIVSUFSORT.divsufsort(ptr[byte], Ptr[Int[32]], int)
 
+from typing import Optional
 from archive import RdiArchive
 
 SA_RDI_EXT = '.sa.rdi'
 
 # Builds a suffix array using libdivsufsort, given a Text and its length
-def build_suffix_array(Text: str, n) -> List[Int[32]]:
+def _build_suffix_array(Text: str, n) -> List[Int[32]]:
     print("Building suffix array...")
     SA = Ptr[Int[32]](n)
     divsufsort(Text.c_str(), SA, n)
@@ -14,12 +15,12 @@ def build_suffix_array(Text: str, n) -> List[Int[32]]:
     return [SA[i] for i in range(n)]
 
 # Loads a suffix array from disk
-def load_suffix_array(file_path) -> List[Int[32]]:
+def _load_suffix_array(file_path) -> List[Int[32]]:
     archive = RdiArchive[List[Int[32]]]()
     return archive.load(file_path, SA_RDI_EXT)
 
 # Writes a suffix array to disk
-def write_suffix_array(suffix_array, file_path):
+def _write_suffix_array(suffix_array, file_path):
     print('Saving suffix array to disk...')
     archive = RdiArchive[List[Int[32]]]()
     archive.write(suffix_array, file_path, SA_RDI_EXT)
@@ -27,19 +28,22 @@ def write_suffix_array(suffix_array, file_path):
 # Attempts to read a suffix array from disk, and generates one if
 # loading the suffix array fails. The suffix array is then written to
 # disk.
-def load_or_build_suffix_array(Text: str, n, file_path: str):
-    try:
-        # Check if suffix array is already generated.
-        SA = load_suffix_array(file_path)
-        print("[debug] Loaded SA from file successfully")
-        return SA
+def build_suffix_array(Text: str, n, file_path: Optional[str]):
+    if file_path is not None:
+        try:
+            # Check if suffix array is already generated.
+            SA = _load_suffix_array(file_path)
+            print("[debug] Loaded SA from file successfully")
+            return SA
+        
+        except:
+            # Cannot read suffix array from disk. Build the suffix array.
+            print("[debug] Failed to load suffix array.")
     
-    except:
-        # Cannot read suffix array from disk. Build the suffix array.
-        print("[debug] Failed to load suffix array.")
-        SA = build_suffix_array(Text, n)
-
+    SA = _build_suffix_array(Text, n)
+    
+    if file_path is not None:
         # Save the suffix array to disk
-        write_suffix_array(SA, file_path)
+        _write_suffix_array(SA, file_path)
 
-        return SA
+    return SA

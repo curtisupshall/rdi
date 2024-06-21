@@ -1,11 +1,11 @@
 from archive import RdiArchive
+from typing import Optional
 
 LCP_RDI_EXT = '.lcp.rdi'
 
 # Builds an LCP array.
-# TODO give type annotation to `n`
 # TODO add tqdm to this method
-def build_lcp_array(Text: str, n, suffix_array: List[Int[32]]) -> List[int]:
+def _build_lcp_array(Text: str, n, suffix_array: List[Int[32]]) -> List[int]:
     print("Building LCP array...")
 
     lcp = List[int]([0] * (n))
@@ -30,31 +30,34 @@ def build_lcp_array(Text: str, n, suffix_array: List[Int[32]]) -> List[int]:
     return [0] + [0] + lcp + [0]
 
 # Loads an LCP array from disk
-def load_lcp_array(file_path) -> List[int]:
+def _load_lcp_array(file_path) -> List[int]:
     archive = RdiArchive[List[int]]()
     return archive.load(file_path, LCP_RDI_EXT)
 
 # Writes an LCP array to disk
-def write_lcp_array(LCP, file_path):
+def _write_lcp_array(LCP, file_path):
     print('Saving LCP array to disk...')
     archive = RdiArchive[List[int]]()
     archive.write(LCP, file_path, LCP_RDI_EXT)
 
 # Attempts to read an LCP array from disk, and generates one if
 # loading the LCP array fails. The LCP is then written to disk.
-def load_or_build_lcp_array(Text: str, n, SA: List[Int[32]], file_path: str):
-    try:
-        # Check if LCP array is already generated.
-        LCP = load_lcp_array(file_path)
-        print("[debug] Loaded LCP from file successfully")
-        return LCP
+def build_lcp_array(Text: str, n: int, SA: List[Int[32]], file_path: Optional[str]):
+    if file_path is not None:
+        try:
+            # Check if LCP array is already generated.
+            LCP = _load_lcp_array(file_path)
+            print("[debug] Loaded LCP from file successfully")
+            return LCP
+
+        except:
+            # Cannot read LCP array from disk. Build the LCP array.
+            print("[debug] Failed to load LCP array.")
     
-    except:
-        # Cannot read LCP array from disk. Build the LCP array.
-        print("[debug] Failed to load LCP array.")
-        LCP = build_lcp_array(Text, n, SA)
+    LCP = _build_lcp_array(Text, n, SA)
 
+    if file_path is not None:
         # Save the LCP array to disk
-        write_lcp_array(LCP, file_path)
+        _write_lcp_array(LCP, file_path)
 
-        return LCP
+    return LCP
