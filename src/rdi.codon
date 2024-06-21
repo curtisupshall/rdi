@@ -86,6 +86,53 @@ class RepeatDetectonIndex:
             self.__file_path if self.__use_checkpoints else None
         )
 
+    # Runs the repeat detection algorithm to retrieve kmer and anchor string
+    # data, used to perform assembly
+    def get_asm_data_by_rdi(
+        self,
+        length_range: Tuple[int, int],
+        coverage_range: Tuple[int, int]
+    ):
+        self.__assert_sa()
+        self.__assert_lcp()
+        
+        l_min, l_max = length_range
+        c_min, c_max = coverage_range
+        
+        # A list of candidate anchors, each represented by a tuple whereby the
+        # first value is the index in the suffix array, and the second value
+        # is the length of the string.
+        candidate_anchors: List[Tuple[int, int]] = []
+
+        # A list representing read kmers. Each kmer is represented by a tuple
+        # whereby the first value is the index in the suffix array, and the
+        # second value is the number of its occurrences.
+        kmers: List[Tuple[int, int]] = []
+
+        def _report(records: List[Tuple[int, int, int]]):
+            for record in records:
+                i, l, r = record
+                # p: int = int(self.__sa[i]) # Arbitrary appearance position in the text
+
+                # Check if the record should be stored as a kmer
+                if l == self.__k:
+                    kmers.append((i, r))
+
+                # Check if the record should be stored as a candidate anchor
+                if l_min <= l and l_max >= l and c_min <= r and c_max >= r:
+                    candidate_anchors.append((i, l))
+
+                return
+        
+        repeat_detection_index(
+            self.__n,
+            self.__sa,
+            self.__lcp,
+            self.__k,
+            _report
+        )
+
+    # Returns a repeat detection index as a dictionary
     def build_repeat_detection_index(self):        
         self.__assert_sa()
         self.__assert_lcp()
@@ -95,7 +142,7 @@ class RepeatDetectonIndex:
         def _report(records: List[Tuple[int, int, int]]):
             for record in records:
                     i, l, r = record
-                    p: int = int(self.__sa[i]) # Arbitrary appearance position in the text  
+                    p: int = int(self.__sa[i]) # Arbitrary appearance position in the text
 
                     if l not in dictionary:
                         dictionary[l] = dict()
@@ -109,14 +156,12 @@ class RepeatDetectonIndex:
             self.__lcp,
             self.__k,
             _report
-            # self.__file_path if self.__use_checkpoints else None
         )
         
         return dictionary
 
     def __add_read(self, read: FASTQRecord):
         start_position = self.__n
-        # self.__text += f'{str(read.seq).upper()}_'
         self.__n += len(read.seq) + 1
         self.__reads.append((start_position, read))
         return
