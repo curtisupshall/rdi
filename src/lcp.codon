@@ -30,7 +30,7 @@ def _build_lcp_array(Text: str, n, suffix_array: List[Int[32]]) -> List[int]:
     return [0] + [0] + lcp + [0]
 
 # Loads an LCP array from disk
-def _load_lcp_array(file_path) -> List[int]:
+def load_lcp_array(file_path) -> List[int]:
     archive = RdiArchive[List[int]]()
     return archive.load(file_path, LCP_RDI_EXT)
 
@@ -46,7 +46,7 @@ def build_lcp_array(Text: str, n: int, SA: List[Int[32]], file_path: Optional[st
     if file_path is not None:
         try:
             # Check if LCP array is already generated.
-            LCP = _load_lcp_array(file_path)
+            LCP = load_lcp_array(file_path)
             print("[debug] Loaded LCP from file successfully")
             return LCP
 

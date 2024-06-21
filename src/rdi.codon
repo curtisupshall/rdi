@@ -1,8 +1,8 @@
 from bio import *
 from python import tqdm
-from sa import load_or_build_suffix_array, build_suffix_array
-from lcp import load_or_build_lcp_array, build_lcp_array
-from index import load_or_generate_repeat_detection_index, generate_repeat_detection_index
+from sa import build_suffix_array
+from lcp import build_lcp_array
+from index import repeat_detection_index
 
 DEFAULT_KMER_SIZE = 12
 
@@ -72,57 +72,47 @@ class RepeatDetectonIndex:
             raise ValueError("Cannot build a repeat detection index with an empty LCP array.")
         
     def build_suffix_array(self):
-        if self.__use_checkpoints:
-            self.__sa = load_or_build_suffix_array(
-                self.__text,
-                self.__n,
-                self.__file_path
-            )
-        else:
-            self.__sa = build_suffix_array(
-                self.__text,
-                self.__n,
-            )
+        self.__sa = build_suffix_array(
+            self.__text,
+            self.__n,
+            self.__file_path if self.__use_checkpoints else None
+        )
         
     def build_lcp_array(self):
-        if self.__use_checkpoints:
-            self.__lcp = load_or_build_lcp_array(
-                self.__text,
-                self.__n,
-                self.__sa,
-                self.__file_path
-            )
-        else:
-            self.__lcp = build_lcp_array(
-                self.__text,
-                self.__n,
-                self.__sa,
-            )
+        self.__lcp = build_lcp_array(
+            self.__text,
+            self.__n,
+            self.__sa,
+            self.__file_path if self.__use_checkpoints else None
+        )
 
     def build_repeat_detection_index(self):        
         self.__assert_sa()
         self.__assert_lcp()
+        
+        dictionary = Dict[int, Dict[int, List[int]]]()
+        
+        def _report(records: List[Tuple[int, int, int]]):
+            for record in records:
+                    i, l, r = record
+                    p: int = int(self.__sa[i]) # Arbitrary appearance position in the text  
 
-        if self.__use_checkpoints:
-            load_or_generate_repeat_detection_index(
-                self.__n,
-                self.__sa,
-                self.__lcp,
-                self.__k,
-                self.__file_path
-            )
-        else:
-            pass
-            # dictionary, kmer_counts = generate_repeat_detection_index(
-            #     self.__n,
-            #     self.__sa,
-            #     self.__lcp,
-            #     self.__k
-                
-            # )            
-            
-        # self.__report_kmers(kmer_counts)
+                    if l not in dictionary:
+                        dictionary[l] = dict()
+                    if r not in dictionary[l]:
+                        dictionary[l][r] = list()
+                    dictionary[l][r].append(p)
 
+        repeat_detection_index(
+            self.__n,
+            self.__sa,
+            self.__lcp,
+            self.__k,
+            _report
+            # self.__file_path if self.__use_checkpoints else None
+        )
+        
+        return dictionary
 
     def __add_read(self, read: FASTQRecord):
         start_position = self.__n

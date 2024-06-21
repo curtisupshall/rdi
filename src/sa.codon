@@ -15,7 +15,7 @@ def _build_suffix_array(Text: str, n) -> List[Int[32]]:
     return [SA[i] for i in range(n)]
 
 # Loads a suffix array from disk
-def _load_suffix_array(file_path) -> List[Int[32]]:
+def load_suffix_array(file_path) -> List[Int[32]]:
     archive = RdiArchive[List[Int[32]]]()
     return archive.load(file_path, SA_RDI_EXT)
 
@@ -32,7 +32,7 @@ def build_suffix_array(Text: str, n, file_path: Optional[str]):
     if file_path is not None:
         try:
             # Check if suffix array is already generated.
-            SA = _load_suffix_array(file_path)
+            SA = load_suffix_array(file_path)
             print("[debug] Loaded SA from file successfully")
             return SA
         
