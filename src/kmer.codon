@@ -4,46 +4,59 @@ def get_kmer_rdi_ext(k: int):
     return f'.{k}mer.rdi'
 
 # TODO refactor these
-def write_kmers(k, kmer_counts, file_path):
-    print(f'Writing kmer counts to disk... ')
-    archive = RdiArchive[Dict[int, int]]()
-    archive.write(kmer_counts, file_path, get_kmer_rdi_ext(k))
+# def write_kmers(k, kmer_counts, file_path):
+#     print(f'Writing kmer counts to disk... ')
+#     archive = RdiArchive[Dict[int, int]]()
+#     archive.write(kmer_counts, file_path, get_kmer_rdi_ext(k))
     
-def load_kmers(k, file_path):
-    print(f'Loading kmer counts from disk... ')
-    archive = RdiArchive[Dict[int, int]]()
-    return archive.load(file_path, get_kmer_rdi_ext(k))
+# def load_kmers(k, file_path):
+#     print(f'Loading kmer counts from disk... ')
+#     archive = RdiArchive[Dict[int, int]]()
+#     return archive.load(file_path, get_kmer_rdi_ext(k))
+
 
 # This function provides the indices for a list of reads where a given set of
 # kmers can be found.
-def get_read_indices_for_kmers(reads: List[Read], k: int, kmer_counts: Dict[int, int]):
-        # reads: The list of Read objects.
-        # k: The length of the kmers.
-        # kmer_counts: A dictionary whose keys are indices in the suffix array
-        # table and whose values are the number of occurrences of that kmer.
-        
+def get_read_indices_for_kmers(
+    # sa: The suffix array
+    sa: List[Int[32]],
+
+    # reads: The list of Read objects.
+    reads: List[Read],
+
+    # k: The length of the kmers.
+    k: int,
+
+    # kmer_counts: A list of tuples representing kmer counts. The first value
+    # is the index in the suffix array table and the second value is the
+    # number of occurrences for that kmer.
+    kmer_counts: List[Tuple[int, int]]
+):
+
         num_kmers = len(kmer_counts)
         print(f"Reporting {num_kmers} kmers...")
+
+        # Dictionary storing read indices for kmers. The key is the index of
+        # the read in the given list of reads, and the value is the position on
+        # the text where the 
+        kmer_positions = List[Tuple[int, int]]
         
         progress = tqdm.tqdm(total=num_kmers, smoothing=0)
-        for i, r in kmer_counts.items():
-            ps = [int(p) for p in self.__sa[i:i+r]]
+        for i, r in kmer_counts:
             # Iterate over all positions for a given kmer of length k
+            ps = [int(p) for p in sa[i:i+r]]
             for p in ps:
                 # Perform a binary search on the read data
-
                 low = 0
-                high = len(self.__reads) - 1
+                high = len(reads) - 1
 
                 while low <= high:
                     mid = (low + high) // 2 # integer division
-                    pivot = self.__reads[mid]
+                    pivot = reads[mid]
 
                     if p >= pivot.position:
-                        if p + self.__k <= pivot.position + len(pivot.record.seq):
-                            # print(self.__text[p:p+self.__k])
-                            # print(pivot.record.seq)
-                            pass
+                        if p + k <= pivot.position + len(pivot.record.seq):
+                            kmer_positions.append((mid, p))
                             break
                         else:
                             low = mid + 1

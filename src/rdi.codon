@@ -3,6 +3,7 @@ from python import tqdm
 from sa import build_suffix_array
 from lcp import build_lcp_array
 from index import repeat_detection_index
+from kmer import get_read_indices_for_kmers
 
 DEFAULT_KMER_SIZE = 12
 
@@ -107,7 +108,7 @@ class RepeatDetectonIndex:
         # A list representing read kmers. Each kmer is represented by a tuple
         # whereby the first value is the index in the suffix array, and the
         # second value is the number of its occurrences.
-        kmers: List[Tuple[int, int]] = []
+        kmer_counts: List[Tuple[int, int]] = []
 
         def _report(records: List[Tuple[int, int, int]]):
             for record in records:
@@ -116,14 +117,15 @@ class RepeatDetectonIndex:
 
                 # Check if the record should be stored as a kmer
                 if l == self.__k:
-                    kmers.append((i, r))
+                    kmer_counts.append((i, r))
 
                 # Check if the record should be stored as a candidate anchor
                 if l_min <= l and l_max >= l and c_min <= r and c_max >= r:
                     candidate_anchors.append((i, l))
 
-                return
+            return
         
+        # Step 1. Run the RDI algroithm
         repeat_detection_index(
             self.__n,
             self.__sa,
@@ -131,6 +133,16 @@ class RepeatDetectonIndex:
             self.__k,
             _report
         )
+        
+        # Step 2. Associate reads with kmers and anchor strings
+        read_indices_for_kmers = get_read_indices_for_kmers(
+            self.__sa,
+            self.__reads,
+            self.__k,
+            kmer_counts
+        )
+        
+        
 
     # Returns a repeat detection index as a dictionary
     def build_repeat_detection_index(self):        
