@@ -106,6 +106,10 @@ def main():
         lmin = int(args.lmin)
         lmax = int(args.lmax)
         a = int(args.a)
+        
+        rdi.build_suffix_array()
+        rdi.build_lcp_array()
+        rdi.get_asm_data_by_rdi((lmin, lmax), (coverage - a, coverage + a))
 
         # perform_assembly(rdi.__text, file_path, coverage, lmin, lmax, a)
         

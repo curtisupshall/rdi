@@ -4,6 +4,7 @@ from sa import build_suffix_array
 from lcp import build_lcp_array
 from index import repeat_detection_index
 from kmer import get_read_indices_for_kmers
+from anchor import get_read_indices_for_anchors
 from read import Read
 
 DEFAULT_KMER_SIZE = 12
@@ -96,10 +97,10 @@ class RepeatDetectonIndex:
         l_min, l_max = length_range
         c_min, c_max = coverage_range
         
-        # A list of candidate anchors, each represented by a tuple whereby the
-        # first value is the index in the suffix array, and the second value
-        # is the length of the string.
-        candidate_anchors: List[Tuple[int, int]] = []
+        # A list of tuples representing candidate anchors. The first value
+        # is the index in the suffix array table, the second value is the length of
+        # the anchor, and the third value is the number of occurrences.
+        candidate_anchors: List[Tuple[int, int, int]] = []
 
         # A list representing read kmers. Each kmer is represented by a tuple
         # whereby the first value is the index in the suffix array, and the
@@ -136,6 +137,12 @@ class RepeatDetectonIndex:
             self.__reads,
             self.__k,
             kmer_counts
+        )
+        read_indices_for_anchors = get_read_indices_for_anchors(
+            self.__sa,
+            self.__reads,
+            self.__k,
+            candidate_anchors
         )
         
         
