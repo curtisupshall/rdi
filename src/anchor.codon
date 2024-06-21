@@ -1,0 +1,58 @@
+from read import Read
+from python import tqdm
+
+
+# This function provides the indices for a list of reads where a given set of
+# candidate anchor strings can be found.
+def get_read_indices_for_anchors(
+    # sa: The suffix array
+    sa: List[Int[32]],
+
+    # reads: The list of Read objects.
+    reads: List[Read],
+
+    # k: The length of the kmers.
+    k: int,
+
+    # anchors: A list of tuples representing candidate anchors. The first value
+    # is the index in the suffix array table, the second value is the length of
+    # the anchor, and the third value is the number of occurrences.
+    anchors: List[Tuple[int, int, int]]
+):
+
+        num_anchors = len(anchors)
+        print(f"Aggregating read indices for {num_anchors} anchors...")
+
+        # Dictionary storing read indices for anchors. The key is the index of
+        # the read in the given list of reads, and the value is list of
+        # indices in the array of anchors
+        read_anchor_indices = Dict[int, List[int]]()
+        
+        progress = tqdm.tqdm(total=num_anchors, smoothing=0)
+        
+        # TODO this loop could be unnested
+        for x, (i, _l, r) in enumerate(anchors):
+            # Iterate over all positions for a given anchor of length l
+            ps = [int(p) for p in sa[i:i+r]]
+            for p in ps:
+                # Perform a binary search on the read data
+                low = 0
+                high = len(reads) - 1
+
+                while low <= high:
+                    mid = (low + high) // 2 # integer division
+                    pivot = reads[mid]
+
+                    if p >= pivot.position:
+                        if p + k <= pivot.position + len(pivot.record.seq):
+                            if mid not in read_anchor_indices:
+                                read_anchor_indices[mid] = []
+                            read_anchor_indices[mid].append(x)
+                            break
+                        else:
+                            low = mid + 1
+                    else:
+                        high = mid - 1
+            progress.update(1)
+
+        progress.close()

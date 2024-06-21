@@ -4,13 +4,9 @@ from sa import build_suffix_array
 from lcp import build_lcp_array
 from index import repeat_detection_index
 from kmer import get_read_indices_for_kmers
+from read import Read
 
 DEFAULT_KMER_SIZE = 12
-
-@tuple
-class Read:
-    position: int
-    record: FASTQRecord
 
 class RepeatDetectonIndex:
     # The file path pointing to the FASTQ file
@@ -121,7 +117,7 @@ class RepeatDetectonIndex:
 
                 # Check if the record should be stored as a candidate anchor
                 if l_min <= l and l_max >= l and c_min <= r and c_max >= r:
-                    candidate_anchors.append((i, l))
+                    candidate_anchors.append((i, l, r))
 
             return
         

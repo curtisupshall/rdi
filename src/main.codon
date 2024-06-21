@@ -2,7 +2,7 @@ from bio import *
 import sys
 from python import os, argparse, random, time, tqdm
 from index import load_index
-from assembly import perform_assembly
+# from assembly import perform_assembly
 from rdi import RepeatDetectonIndex
 from random import shuffle
 
@@ -107,7 +107,7 @@ def main():
         lmax = int(args.lmax)
         a = int(args.a)
 
-        perform_assembly(rdi.__text, file_path, coverage, lmin, lmax, a)
+        # perform_assembly(rdi.__text, file_path, coverage, lmin, lmax, a)
         
         # for (p, l, r) in anchors:
         #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')

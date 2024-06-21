@@ -1,4 +1,5 @@
-from rdi import Read
+from read import Read
+from python import tqdm
 
 def get_kmer_rdi_ext(k: int):
     return f'.{k}mer.rdi'
@@ -34,15 +35,17 @@ def get_read_indices_for_kmers(
 ):
 
         num_kmers = len(kmer_counts)
-        print(f"Reporting {num_kmers} kmers...")
+        print(f"Aggregating read indices for {num_kmers} kmers...")
 
         # Dictionary storing read indices for kmers. The key is the index of
-        # the read in the given list of reads, and the value is the position on
-        # the text where the 
-        kmer_positions = List[Tuple[int, int]]
+        # the read in the given list of reads, and the value is list of
+        # indices in the array of kmers
+        read_kmer_indices = Dict[int, List[int]]()
         
         progress = tqdm.tqdm(total=num_kmers, smoothing=0)
-        for i, r in kmer_counts:
+        
+        # TODO this loop could be unnested
+        for x, (i, r) in enumerate(kmer_counts):
             # Iterate over all positions for a given kmer of length k
             ps = [int(p) for p in sa[i:i+r]]
             for p in ps:
@@ -56,7 +59,9 @@ def get_read_indices_for_kmers(
 
                     if p >= pivot.position:
                         if p + k <= pivot.position + len(pivot.record.seq):
-                            kmer_positions.append((mid, p))
+                            if mid not in read_kmer_indices:
+                                read_kmer_indices[mid] = []
+                            read_kmer_indices[mid].append(x)
                             break
                         else:
                             low = mid + 1
