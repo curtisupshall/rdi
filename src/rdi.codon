@@ -1,123 +1,186 @@
 from bio import *
-import sys
-from python import os, argparse, random, time
-from index import create_index, load_index
-from assembly import perform_assembly
+from python import tqdm
+from sa import build_suffix_array
+from lcp import build_lcp_array
+from index import repeat_detection_index
+from kmer import get_read_indices_for_kmers
+from read import Read
 
-def main():
-    system_args = sys.argv[1:]
+DEFAULT_KMER_SIZE = 12
 
-    parser = argparse.ArgumentParser(
-        prog='rdi',
-        description='Repeat Detection Index',
+class RepeatDetectonIndex:
+    # The file path pointing to the FASTQ file
+    __file_path: str
+    
+    # The suffix array
+    __sa: List[Int[32]]
+    
+    # The LCP array
+    __lcp: List[int]
+    
+    # The text, built from the reads in the FASTQ file
+    __text: str
+    
+    # The length of the text
+    __n: int
+    
+    # The size of the kmers that are recorded for assembly
+    __k: int
+    
+    # The list of reads found in the FASTQ file
+    __reads: List[Read]
+    
+    # `True` if checkpoints should be used, false otherwise
+    __use_checkpoints: bool
+
+    def __init__(self: RepeatDetectonIndex, file_path: str, use_checkpoints=True, k=DEFAULT_KMER_SIZE):
+        self.__file_path = file_path
+        self.__k = k
+        self.__text = ''
+        self.__n = 0
+        self.__reads = List[Read]([])
+        self.__use_checkpoints = use_checkpoints
+        self.__sa = []
+        self.__lcp = []
+        
+        self.__build_collection(file_path)
+    
+    def __build_collection(self: RepeatDetectonIndex, file_path: str):
+        print("Reading file...")
+        records: List[FASTQRecord] = [record for record in FASTQ(file_path)]
+
+        progress = tqdm.tqdm(total=len(records), smoothing=0)
+
+        for record in records:
+            progress.update(1)
+            self.__add_read(record)
+
+        progress.close()    
+        print(f'Building text for {str(len(self.__reads))} reads...')
+        seqs = [str(read.record.seq).upper() for read in self.__reads]
+        self.__text = '_'.join(seqs)
+        
+    def __assert_sa(self):
+        if len(self.__sa) == 0:
+            raise ValueError("Cannot build a repeat detection index with an empty suffix array.")
+
+    def __assert_lcp(self):
+        if len(self.__lcp) == 0:
+            raise ValueError("Cannot build a repeat detection index with an empty LCP array.")
+        
+    def build_suffix_array(self):
+        self.__sa = build_suffix_array(
+            self.__text,
+            self.__n,
+            self.__file_path if self.__use_checkpoints else None
+        )
+        
+    def build_lcp_array(self):
+        self.__lcp = build_lcp_array(
+            self.__text,
+            self.__n,
+            self.__sa,
+            self.__file_path if self.__use_checkpoints else None
         )
 
-    parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
-    parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
+    # Runs the repeat detection algorithm to retrieve kmer and anchor string
+    # data, used to perform assembly
+    def get_asm_data_by_rdi(
+        self,
+        length_range: Tuple[int, int],
+        coverage_range: Tuple[int, int]
+    ):
+        self.__assert_sa()
+        self.__assert_lcp()
+        
+        l_min, l_max = length_range
+        c_min, c_max = coverage_range
+        
+        # A list of candidate anchors, each represented by a tuple whereby the
+        # first value is the index in the suffix array, and the second value
+        # is the length of the string.
+        candidate_anchors: List[Tuple[int, int]] = []
 
-    parser.add_argument('-c', '--coverage', required=True, help='The known coverage of the experiment')
-    parser.add_argument('-o', '--overwrite', action='store_true', required=False, help='Ignore loading checkpoint files')
+        # A list representing read kmers. Each kmer is represented by a tuple
+        # whereby the first value is the index in the suffix array, and the
+        # second value is the number of its occurrences.
+        kmer_counts: List[Tuple[int, int]] = []
 
-    mode = parser.parse_known_args(system_args)[0].mode
-    try:
-        if mode == 'query':
-            parser.add_argument('-l', '--length', required=False, help='The length of kmers to query')
-            parser.add_argument('-r', '--repeats', required=False, help='The number of repeats to query')
-            parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
-            parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
-        elif mode == 'index':
-            pass
-        elif mode == 'assembly':
-            parser.add_argument('--lmin', required=True, help='The minimum length for candidate anchors')
-            parser.add_argument('--lmax', required=True, help='The maximum length for candidate anchors')
-            parser.add_argument('-a', required=True, help='The coverage delta')
+        def _report(records: List[Tuple[int, int, int]]):
+            for record in records:
+                i, l, r = record
+                # p: int = int(self.__sa[i]) # Arbitrary appearance position in the text
 
-    except:
-        return 0
+                # Check if the record should be stored as a kmer
+                if l == self.__k:
+                    kmer_counts.append((i, r))
 
-    try:
-        args = parser.parse_args(system_args)
-    except:
-        return 0
+                # Check if the record should be stored as a candidate anchor
+                if l_min <= l and l_max >= l and c_min <= r and c_max >= r:
+                    candidate_anchors.append((i, l, r))
 
-    file_path = args.file_path
-    mode = args.mode
+            return
+        
+        # Step 1. Run the RDI algroithm
+        repeat_detection_index(
+            self.__n,
+            self.__sa,
+            self.__lcp,
+            self.__k,
+            _report
+        )
+        
+        # Step 2. Associate reads with kmers and anchor strings
+        read_indices_for_kmers = get_read_indices_for_kmers(
+            self.__sa,
+            self.__reads,
+            self.__k,
+            kmer_counts
+        )
+        
+        
 
-    # Check if file actually exists
-    if not os.path.exists(file_path):
-        print(f'No file was found at {file_path}. Exiting.')
-        return 0
+    # Returns a repeat detection index as a dictionary
+    def build_repeat_detection_index(self):        
+        self.__assert_sa()
+        self.__assert_lcp()
+        
+        dictionary = Dict[int, Dict[int, List[int]]]()
+        
+        def _report(records: List[Tuple[int, int, int]]):
+            for record in records:
+                    i, l, r = record
+                    p: int = int(self.__sa[i]) # Arbitrary appearance position in the text
 
-    Text = ''
+                    if l not in dictionary:
+                        dictionary[l] = dict()
+                    if r not in dictionary[l]:
+                        dictionary[l][r] = list()
+                    dictionary[l][r].append(p)
 
-    reads = list()
+        repeat_detection_index(
+            self.__n,
+            self.__sa,
+            self.__lcp,
+            self.__k,
+            _report
+        )
+        
+        return dictionary
 
-    print("Reading file...")
-    for read in FASTQ(file_path):
-        # num_base_pairs = num_base_pairs + len(read.seq)
-        reads.append(str(read.seq).upper())
+    def __add_read(self, read: FASTQRecord):
+        start_position = self.__n
+        self.__n += len(read.seq) + 1
+        self.__reads.append((start_position, read))
+        return
 
-    Text = '_'.join(reads)
-    # print(f"Length of built Text from reads data: {len(Text), ','}")
+    def __report_kmers(self, kmer_counts: List[Tuple[int, int]]):
+        self.__assert_sa()
+        
+        pass
     
-    coverage = int(args.coverage)
-
-    if mode == 'index':    
-        # Index the input file
-        create_index(Text, file_path)
-
-        print('\bDone.')
-        return 0
-
-    elif mode == 'query':
-
-        # Build btree
-        Rdi = load_index(file_path)
-        queries = List[Tuple[int, int]]([])
-        
-        # Read queries from file/stdin
-        if args.input:
-            with open(args.input, 'r') as f:
-                for line in f:
-                    query = line.strip().split(' ')
-                    l, r = query
-                    queries.append((int(l), int(r)))
-
-        # Read query from CLI args
-        elif args.length and args.repeats:
-            queries.append((int(args.length), int(args.repeats)))
-
-        # Measure time to complete requests
-        start_time = time.time()
-
-        # Query the index
-        # TODO this searching logic should really be in its own function in query.codon
-        for query in queries:
-            (l, r) = query
-            # rs = Rdi.find(l)
-            rs = Rdi[l] if l in Rdi else {}
-            # ps = rs.find(r, List[int]([]))
-            ps = rs[r] if r in rs else List[int]([])
-
-            for p in (ps):
-                print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
-
-            # Print query statistics
-            if args.verbose:
-                print(f'> Found {len(ps)} kmers of length {l} occurring {r} {"time" if r == 1 else "times"}')
-
-        end_time = time.time()
-        print(f'> Ran {len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
-        return 0
-
-    elif mode == 'assembly':
-        lmin = int(args.lmin)
-        lmax = int(args.lmax)
-        a = int(args.a)
-
-        perform_assembly(Text, file_path, coverage, lmin, lmax, a)
-        
-        # for (p, l, r) in anchors:
-        #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
-
-main()
+    def __report_anchor(self, p: int, l: int, r: int):
+        pass
+    
+    def file_path(self) -> str:
+        return self.__file_path

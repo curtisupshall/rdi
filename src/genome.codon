@@ -1,0 +1,16 @@
+
+
+def assemble_contigs():
+    
+    # Step 1: For each candidate anchor string, gather all reads belonging to it
+    for anchor in anchors:
+        
+    
+        break
+        # Step 2: For each read, we have O(1) access to all its (repeated) kmers. Using these, we can cluster the reads
+        
+        # Step 3: Simply yield the largest cluster.
+    
+    # Step 4:  Given each cluster, align all the reads on the candidate anchor string, then take the average
+    
+    

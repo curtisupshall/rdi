@@ -3,6 +3,7 @@
 
 rdi
 *.o
+*.out
 include/*
 lib/*
 !.gitkeep

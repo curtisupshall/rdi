@@ -1,0 +1,6 @@
+from bio import FASTQRecord
+
+@tuple
+class Read:
+    position: int
+    record: FASTQRecord

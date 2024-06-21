@@ -1,27 +1,72 @@
-from sa import build_suffix_array
-from lcp import build_lcp_array
-from index import _generate_index
+from read import Read
+from python import tqdm
 
-def count_kmers(Text: str, k: int):
+def get_kmer_rdi_ext(k: int):
+    return f'.{k}mer.rdi'
 
-    n = len(Text)
-
-    suffix_array = build_suffix_array(Text, n)
-    lcp_array = build_lcp_array(Text, n, suffix_array)
-
-    index = _generate_index(Text, n, suffix_array, lcp_array)
-
-    if k not in index:
-        return {}
-
-    kmers = {}
-    for r, ps in index[k].items():
-        for p in ps:
-            kmers[Text[p:p+k]] = r
-
-    return kmers
+# TODO refactor these
+# def write_kmers(k, kmer_counts, file_path):
+#     print(f'Writing kmer counts to disk... ')
+#     archive = RdiArchive[Dict[int, int]]()
+#     archive.write(kmer_counts, file_path, get_kmer_rdi_ext(k))
+    
+# def load_kmers(k, file_path):
+#     print(f'Loading kmer counts from disk... ')
+#     archive = RdiArchive[Dict[int, int]]()
+#     return archive.load(file_path, get_kmer_rdi_ext(k))
 
 
-threemers = count_kmers('AGTATGCTTCGTTCAGTTACACGTATTGCTGGGCGGCGACCTCATGAGTTTCGCTATTTATGAAAATTTTCCGGTTTAAGGCGTTTCCGTTCTTCTTCGTCATAACTTAATGTTTTTAAAAAATACCCTCTGAAAAAACGACAGGTCACTGGCAAACTTTTAGCCTCTGTCGTTTCCTTTCTGCAATTTTGTCCGTGGAATGAACAATGGAAGTCAACAAAAAGCGGCAACGGCATTTTCGGTGCAGTATCCGTACCATTCAGAACTTCAACGGGAACAGGAATGCCCGTTCTACGAGCGGTAACAAAGGTAATAAAGGGTGCTTTATGACTCTGCCGCCGTCATAAAATGGTATGCCGAAAGGGATGCCAATTGAAACAGCTGCCGGGAGGTTGAAGAACTGCGGCAGGCCAGCGAGGCAGAGATCTCCAGCCAAGAACTATTAATTACAGAACGCCATCGACTTACGCGTGCGCAGGCCGACGCACAGGAACTGAAGAATGTGAGACTCCGCTGAGTAGTGGAAATAGCCGCATCTGCTTTCGTGCTGTCGCGGATCACGGGTAAAAATTGCCGGTATTCTCGACGGGCTCCCCACAATCGGTGCAGCGGCGTTTTCGGAACTGGAAAACCGACATGTTGATTTCCTGAAACAGGATATCATCAAAGCCATGAACAAAGCAGCCGCGCTGGATGAACTGATACCGGGGTTGCTGAGTGAATATATCGAACAGTCAGGTTAACAGGCTGCGGCATTTTGTCCGCGCCGGGCTTCGCTCACTGTTCAGGCCGGAGCCTGAACCGCCGTTGAATGGGCGGATGCTAATTACTATCTCCCGAAAAAGTCCGCATACCAGGAAGGGCGCTGGGAAACGCTGCCCTTTCGGCAGGCCATCATGAATGCGATGGGCAGCGACTACATCCGTATTGAGGTGATGAATGTGGTGAAGTCTGCCCGTGTCGGTTATTCCAAAATGCTGCTGGGTGTTTATGCCTACTTTATAGAGCATAAACGGCGCAACACCCTTATCTGGTTGCCGACGGATGGTGATGCCGAGAACTTTTATGAAAACCCGTTGAGCCATTATTCGTGATATTCGTCGCTGCTGGCGCTGGCCCGTGGTATGGCAAAAAGAGCAATGCGTAATA', 6)
+# This function provides the indices for a list of reads where a given set of
+# kmers can be found.
+def get_read_indices_for_kmers(
+    # sa: The suffix array
+    sa: List[Int[32]],
 
-print(threemers)
+    # reads: The list of Read objects.
+    reads: List[Read],
+
+    # k: The length of the kmers.
+    k: int,
+
+    # kmer_counts: A list of tuples representing kmer counts. The first value
+    # is the index in the suffix array table and the second value is the
+    # number of occurrences for that kmer.
+    kmer_counts: List[Tuple[int, int]]
+):
+
+        num_kmers = len(kmer_counts)
+        print(f"Aggregating read indices for {num_kmers} kmers...")
+
+        # Dictionary storing read indices for kmers. The key is the index of
+        # the read in the given list of reads, and the value is list of
+        # indices in the array of kmers
+        read_kmer_indices = Dict[int, List[int]]()
+        
+        progress = tqdm.tqdm(total=num_kmers, smoothing=0)
+        
+        # TODO this loop could be unnested
+        for x, (i, r) in enumerate(kmer_counts):
+            # Iterate over all positions for a given kmer of length k
+            ps = [int(p) for p in sa[i:i+r]]
+            for p in ps:
+                # Perform a binary search on the read data
+                low = 0
+                high = len(reads) - 1
+
+                while low <= high:
+                    mid = (low + high) // 2 # integer division
+                    pivot = reads[mid]
+
+                    if p >= pivot.position:
+                        if p + k <= pivot.position + len(pivot.record.seq):
+                            if mid not in read_kmer_indices:
+                                read_kmer_indices[mid] = []
+                            read_kmer_indices[mid].append(x)
+                            break
+                        else:
+                            low = mid + 1
+                    else:
+                        high = mid - 1
+            progress.update(1)
+
+        progress.close()

@@ -9,267 +9,86 @@ from jaccard import similarity
 from archive import RdiArchive
 from basecount import basepair_mode
 
-CANDIDATE_ANCHORS_RDI_EXT = '.cdt.rdi'
-ANCHOR_READS_RDI_EXT = '.anrd.rdi'
-CONTIGS_RDI_EXT = '.contigs.rdi'
-
-def generate_anchor_queries(coverage: int, lmin: int, lmax: int, a: int) -> List[Tuple[int, int]]:
-
-    ls = [l for l in range(lmin, lmax + 1)]
-    cs = [c for c in range(coverage - a, coverage + a + 1)]
-
-    return [(l, c) for l in ls for c in cs]
-
-def find_candidate_anchors(Text: str, coverage: int, lmin: int, lmax: int, a: int, file_path: str):
-    Rdi = load_index(file_path)
-
-    print("Generating anchor queries...")
-    queries = generate_anchor_queries(coverage, lmin, lmax, a)
-    
-    print("Querying index for cadidate...")
-    anchors = List[Tuple[int, int, int]]()
-    progress = tqdm.tqdm(total=len(queries), smoothing=0)
-
-    # @omp.critical
-    def report(p: int, l: int, r: int):
-        anchors.append((p, l, r))
-
-    # @omp.critical
-    def increment_progress():
-        progress.update(1)
-
-    # @par(schedule='static', chunk_size=100, num_threads=32, ordered=False)
-    for l, r in queries:
-        # Find candidate strings using index
-        rs = Rdi[l] if l in Rdi else {}
-        ps = rs[r] if r in rs else List[int]([])
-        for p in ps:
-            substring = Text[p:p+l]
-            if ('_' in substring):
-                continue
-            report(p, l, r)
-        increment_progress()
-
-    progress.close()
-    return anchors
+# Deprecated 
+# CANDIDATE_ANCHORS_RDI_EXT = '.cdt.rdi'
+# ANCHOR_READS_RDI_EXT = '.anrd.rdi'
+# CONTIGS_RDI_EXT = '.contigs.rdi'
 
 
-# Loads a set of candidate anchors from disk
-def load_candidate_anchors(file_path) -> List[Tuple[int, int, int]]:
-    archive = RdiArchive[List[Tuple[int, int, int]]]()
-    return archive.load(file_path, CANDIDATE_ANCHORS_RDI_EXT)
+# def cluster_reads(reads: List[seq]):
+#     similarity_threshold = 0.0025
 
-# Loads anchor reads from disk
-def load_anchor_reads(file_path) -> Dict[str, List[seq]]:
-    archive = RdiArchive[Dict[str, List[seq]]]()
-    return archive.load(file_path, ANCHOR_READS_RDI_EXT)
+#     read_clusters: List[List[seq]] = List([List([reads[0]])])
 
-# Writes anchor reads to disk
-def write_anchor_reads(anchor_reads, file_path):
-    print('Saving anchor reads to disk...')
-    archive = RdiArchive[Dict[str, List[seq]]]()
-    archive.write(anchor_reads, file_path, ANCHOR_READS_RDI_EXT)
-
-# Writes a set of candiate anchors to disk
-def write_candidate_anchors(anchors, file_path):
-    print('Saving candidate anchors to disk...')
-    archive = RdiArchive[List[Tuple[int, int, int]]]()
-    archive.write(anchors, file_path, CANDIDATE_ANCHORS_RDI_EXT)
-
-# Writes a set of contigs to disk
-def write_contigs(contigs, file_path):
-    print('Saving contigs to disk...')
-    archive = RdiArchive[List[str]]()
-    archive.write(contigs, file_path, CONTIGS_RDI_EXT)
-
-def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax: int, a: int, file_path: str, overwrite: bool = False):
-    if not overwrite:
-        try:
-            # Check if candidate anchors are generated.
-            anchors = load_candidate_anchors(file_path)
-            print("[debug] Loaded candidate anchors from file successfully")
-            return anchors
-
-        except:
-            # Cannot read anchors from disk. Build the anchor set.
-            print("[debug] Failed to load candiate anchors.")
-
-    anchors = find_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
-
-    # Save the candidate anchors to disk
-    write_candidate_anchors(anchors, file_path)
-    
-    print(f"Found {len(anchors)} candidate anchors:")
-    print(anchors)
-
-    return anchors
-
-def find_or_load_reads_from_candidates(Text: str, anchors: List[Tuple[int, int, int]], file_path):
-    try:
-        # Check if candidate anchors are generated.
-        anchor_reads = load_anchor_reads(file_path)
-        print("[debug] Loaded anchors reads from file successfully")
-        return anchor_reads
-
-    except:
-        # Cannot read anchors from disk. Build the anchor set.
-        print("[debug] Failed to load anchor reads.")
-
-    print(f"Collecting reads from {str(len(anchors))} anchors...")
-    # TODO the anchor should be type seq, not str
-    anchor_reads = Dict[str, List[seq]]({})
-
-    for (p, l, r) in anchors:
-        anchor_sequence = Text[p:p+l]
-        anchor_reads[anchor_sequence] = List[seq]([])
-
-    # Iterate over reads
-    for read in FASTQ(file_path):
-        for anchor_sequence in anchor_reads:
-            if (anchor_sequence in str(read.seq).upper()):
-                anchor_reads[anchor_sequence].append(read.seq)
-
-    # avg = 0
-
-    # for x in anchor_reads:
-    #     avg += len(anchor_reads[x])
-    #     print(f'{x}: {str(len(anchor_reads[x]))}')
-
-    # print(f'Average read count: {str(avg / len(anchor_reads))}')
-    
-    write_anchor_reads(anchor_reads, file_path)
-
-    return anchor_reads
-
-# Debug function.
-def _get_basepair_statistics(position_bases) -> Tuple[str, float]:
-    base_map = { 'A': 0, 'C': 0, 'G': 0, 'T': 0 }
-    for base in position_bases:
-        base_map[base] += 1
-
-    total_sum = sum(base_map.values())
-    if (total_sum == 0):
-        return ('N', 0.00)
-    
-    max_key = 'N'
-    max_value = -float('inf')  # Initialize to negative infinity
-    for key, value in base_map.items():
-        if value > max_value:
-            max_value = value
-            max_key = key
-
-    proportion = max_value / total_sum
-    return (max_key, proportion)
-
-def cluster_reads(reads: List[seq]):
-    similarity_threshold = 0.0025
-
-    read_clusters: List[List[seq]] = List([List([reads[0]])])
-
-    for read in reads[1:]:
-        cluster_index = -1
-        greatest_similarity = -1.0
-        for index, cluster in enumerate(read_clusters):
-            similarity_index = similarity(read, cluster[0])
-            if similarity_index > similarity_threshold and similarity_index > greatest_similarity:
-                cluster_index = index
-                greatest_similarity = similarity_index
+#     for read in reads[1:]:
+#         cluster_index = -1
+#         greatest_similarity = -1.0
+#         for index, cluster in enumerate(read_clusters):
+#             similarity_index = similarity(read, cluster[0])
+#             if similarity_index > similarity_threshold and similarity_index > greatest_similarity:
+#                 cluster_index = index
+#                 greatest_similarity = similarity_index
         
-        if cluster_index == -1:
-            read_clusters.append(List([read]))
-        else:
-            read_clusters[cluster_index].append(read)
+#         if cluster_index == -1:
+#             read_clusters.append(List([read]))
+#         else:
+#             read_clusters[cluster_index].append(read)
 
-    return read_clusters
+#     return read_clusters
 
 
-# Generates a contig based on an anchor string and a list of reads which all contain the anchor string.
-def generate_contig(anchor, reads):
-    # print(f"Generating contig for {str(len(reads))} reads ...")
-    anchor_length = len(anchor)
+# # Generates a contig based on an anchor string and a list of reads which all contain the anchor string.
+# def generate_contig(anchor, reads):
+#     # print(f"Generating contig for {str(len(reads))} reads ...")
+#     anchor_length = len(anchor)
 
-    contig_prefix_length = -1
-    contig_suffix_length = -1
+#     contig_prefix_length = -1
+#     contig_suffix_length = -1
 
-    # Step 1: Find the maximum prefix length before the anchor and the maximum suffix length after the
-    # anchor, along with their corresponding reads.
-    for read in reads:
-        start_index = str(read).index(anchor)
-        suffix_length = len(read) - (start_index + len(anchor))
+#     # Step 1: Find the maximum prefix length before the anchor and the maximum suffix length after the
+#     # anchor, along with their corresponding reads.
+#     for read in reads:
+#         start_index = str(read).index(anchor)
+#         suffix_length = len(read) - (start_index + len(anchor))
 
-        if start_index > contig_prefix_length:
-            contig_prefix_length = start_index
+#         if start_index > contig_prefix_length:
+#             contig_prefix_length = start_index
             
-        if suffix_length > contig_suffix_length:
-            contig_suffix_length = suffix_length
+#         if suffix_length > contig_suffix_length:
+#             contig_suffix_length = suffix_length
 
-    # Allocate consensus array
-    consensus = [List[str]() for _ in range(contig_prefix_length + len(anchor) +  contig_suffix_length)]
+#     # Allocate consensus array
+#     consensus = [List[str]() for _ in range(contig_prefix_length + len(anchor) +  contig_suffix_length)]
 
-    for read in reads:
-        # For this read, determine how many base pairs appear before the anchor occurs
-        read_prefix_length = str(read).index(str(anchor))
+#     for read in reads:
+#         # For this read, determine how many base pairs appear before the anchor occurs
+#         read_prefix_length = str(read).index(str(anchor))
 
-        # For this read, iterate over all the base pairs that appear before the anchor
-        relative_consensus_index = contig_prefix_length - read_prefix_length
-        for i in range(read_prefix_length):
-            consensus[relative_consensus_index + i].append(str(read)[i])
+#         # For this read, iterate over all the base pairs that appear before the anchor
+#         relative_consensus_index = contig_prefix_length - read_prefix_length
+#         for i in range(read_prefix_length):
+#             consensus[relative_consensus_index + i].append(str(read)[i])
 
-        # Next, add the anchor to the consensus
-        for i in range(len(anchor)):
-            consensus[contig_prefix_length + i].append(anchor[i])
+#         # Next, add the anchor to the consensus
+#         for i in range(len(anchor)):
+#             consensus[contig_prefix_length + i].append(anchor[i])
             
-        # Next, iterate over all the base pairs that appear after the anchor
-        read_suffix_start_index = read_prefix_length + anchor_length
-        read_suffix_length = len(read) - read_suffix_start_index
-        relative_consensus_index = contig_prefix_length + anchor_length
-        for i in range(read_suffix_length):
-            consensus[relative_consensus_index + i].append(str(read)[read_suffix_start_index + i])
+#         # Next, iterate over all the base pairs that appear after the anchor
+#         read_suffix_start_index = read_prefix_length + anchor_length
+#         read_suffix_length = len(read) - read_suffix_start_index
+#         relative_consensus_index = contig_prefix_length + anchor_length
+#         for i in range(read_suffix_length):
+#             consensus[relative_consensus_index + i].append(str(read)[read_suffix_start_index + i])
 
-    contig = List[str]([])
+#     contig = List[str]([])
 
-    for index, position_basepairs in enumerate(consensus):
-        (modal_base, popularity) = _get_basepair_statistics(position_basepairs)
-        if popularity < 0.5 or len(position_basepairs) < 10:
-            continue
+#     for index, position_basepairs in enumerate(consensus):
+#         (modal_base, popularity) = _get_basepair_statistics(position_basepairs)
+#         if popularity < 0.5 or len(position_basepairs) < 10:
+#             continue
         
-        contig.append(modal_base)
-        # print(f'{base} (position {index}, popularity: {str(popularity)} among {len(position_basepairs)} reads)')
-    return ''.join(contig)
+#         contig.append(modal_base)
+#         # print(f'{base} (position {index}, popularity: {str(popularity)} among {len(position_basepairs)} reads)')
+#     return ''.join(contig)
 
-
-                
-    
-def perform_assembly(Text: str, file_path: str, coverage: int, lmin: int, lmax: int, a: int):
-    anchors = load_or_generate_candidate_anchors(Text, coverage, lmin, lmax, a, file_path)
-    anchor_reads = find_or_load_reads_from_candidates(Text, anchors, file_path)
-
-    contigs = []
-
-    for index, (anchor, reads) in enumerate(anchor_reads.items()):
-        print(f"Clustering {str(len(reads))} reads for anchor {anchor} ({index + 1} / {len(anchor_reads)})...")
-        
-        read_clusters = cluster_reads(reads)
-        
-        # print(f'Num reads: {str(len(reads))}')
-        # print(f'Num clusters: {str(len(read_clusters))}')
-        
-        # i = 0
-        # print(f"{i}th cluster for anchor {anchor}:")
-        # for read in read_clusters[i]:
-        #     print(f'{str(read)}')
-
-        # break
-        
-        for read_cluster in read_clusters:
-            contigs.append(generate_contig(str(anchor), read_cluster))
-            # print('The Contig:')
-            # print(contig)
-            # break # Debug
-        # break # Debug
-        
-
-    print(f"Num contigs: {str(len(contigs))}")
-    
-    write_contigs(contigs, file_path)
 

@@ -1,0 +1,115 @@
+from bio import *
+import sys
+from python import os, argparse, random, time, tqdm
+from index import load_index
+# from assembly import perform_assembly
+from rdi import RepeatDetectonIndex
+from random import shuffle
+
+def main():
+    system_args = sys.argv[1:]
+
+    parser = argparse.ArgumentParser(
+        prog='rdi',
+        description='Repeat Detection Index',
+        )
+
+    parser.add_argument('mode', choices=['index', 'query', 'assembly'], help='Operation mode; index, query, or assembly')
+    parser.add_argument('file_path', help='Path to your sequencing data (SAM) file')
+
+    parser.add_argument('-c', '--coverage', required=True, help='The known coverage of the experiment')
+    parser.add_argument('-o', '--overwrite', action='store_true', required=False, help='Ignore loading checkpoint files')
+
+    mode = parser.parse_known_args(system_args)[0].mode
+    try:
+        if mode == 'query':
+            parser.add_argument('-l', '--length', required=False, help='The length of kmers to query')
+            parser.add_argument('-r', '--repeats', required=False, help='The number of repeats to query')
+            parser.add_argument('-v', '--verbose', action='store_true', required=False, help='Print statistics')
+            parser.add_argument('-i', '--input', required=False, help='Input file of queries. Queries are of the form "L R", separated by \\n.')
+        elif mode == 'index':
+            pass
+        elif mode == 'assembly':
+            parser.add_argument('--lmin', required=True, help='The minimum length for candidate anchors')
+            parser.add_argument('--lmax', required=True, help='The maximum length for candidate anchors')
+            parser.add_argument('-a', required=True, help='The coverage delta')
+
+    except:
+        return 0
+
+    try:
+        args = parser.parse_args(system_args)
+    except:
+        return 0
+
+    file_path = args.file_path
+    mode = args.mode
+
+    # Check if file actually exists
+    if not os.path.exists(file_path):
+        print(f'No file was found at {file_path}. Exiting.')
+        return 0
+
+    rdi = RepeatDetectonIndex(file_path)
+
+    coverage = int(args.coverage)
+
+    if mode == 'index':    
+        
+        rdi.build_suffix_array()
+        rdi.build_lcp_array()
+        rdi.build_repeat_detection_index()
+
+        print('\bDone.')
+        return 0
+
+    elif mode == 'query':
+        Rdi = load_index(file_path)
+        queries = List[Tuple[int, int]]([])
+
+        # Read queries from file/stdin
+        if args.input:
+            with open(args.input, 'r') as f:
+                for line in f:
+                    query = line.strip().split(' ')
+                    l, r = query
+                    queries.append((int(l), int(r)))
+
+        # Read query from CLI args
+        elif args.length and args.repeats:
+            queries.append((int(args.length), int(args.repeats)))
+
+        # Measure time to complete requests
+        start_time = time.time()
+
+        # Query the index
+        # TODO this searching logic should really be in its own function in query.codon
+        for query in queries:
+            (l, r) = query
+            # rs = Rdi.find(l)
+            rs = Rdi[l] if l in Rdi else {}
+            # ps = rs.find(r, List[int]([]))
+            ps = rs[r] if r in rs else List[int]([])
+
+            for p in (ps):
+                print(f'[{l}] {rdi.__text[p:p+l]} ({r}) @{p}')
+
+            # Print query statistics
+            if args.verbose:
+                print(f'> Found {len(ps)} kmers of length {l} occurring {r} {"time" if r == 1 else "times"}')
+
+        end_time = time.time()
+        print(f'> Ran {len(queries)} {"query" if len(queries) == 1 else "queries"} in {(end_time - start_time) * 1000} ms')
+        return 0
+
+    elif mode == 'assembly':
+        lmin = int(args.lmin)
+        lmax = int(args.lmax)
+        a = int(args.a)
+
+        # perform_assembly(rdi.__text, file_path, coverage, lmin, lmax, a)
+        
+        # for (p, l, r) in anchors:
+        #     print(f'[{l}] {Text[p:p+l]} ({r}) @{p}')
+
+main()

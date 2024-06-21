@@ -25,18 +25,3 @@ class RdiArchive[T]:
 		jar.close()
 
 		return object
-
-# Testing.
-# my_dict = Dict[int, Dict[int, List[int]]]({})
-# my_dict[1] = Dict[int, List[int]]({})
-# my_dict[1][1000] = List[int]([2, 4, 6, 8, 10])
-
-# archive = RdiArchive()
-
-# archive.write(my_dict, 'myfile', '.bin')
-
-# xs = archive.load('myfile', '.bin')
-
-
-# print("xs:")
-# print(xs)
