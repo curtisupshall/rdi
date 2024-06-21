@@ -2,7 +2,7 @@ from bio import *
 from python import tqdm
 from sa import load_or_build_suffix_array, build_suffix_array
 from lcp import load_or_build_lcp_array, build_lcp_array
-from index import load_or_generate_repeat_detection_index, generate_repeat_detection_index, write_index, write_kmers
+from index import load_or_generate_repeat_detection_index, generate_repeat_detection_index
 
 DEFAULT_KMER_SIZE = 12
 
@@ -99,12 +99,12 @@ class RepeatDetectonIndex:
                 self.__sa,
             )
 
-    def build_repeat_detection_index(self):
+    def build_repeat_detection_index(self):        
         self.__assert_sa()
         self.__assert_lcp()
 
         if self.__use_checkpoints:
-            [dictionary, kmer_counts] = load_or_generate_repeat_detection_index(
+            load_or_generate_repeat_detection_index(
                 self.__n,
                 self.__sa,
                 self.__lcp,
@@ -112,17 +112,17 @@ class RepeatDetectonIndex:
                 self.__file_path
             )
         else:
-            dictionary, kmer_counts = generate_repeat_detection_index(
-                self.__n,
-                self.__sa,
-                self.__lcp,
-                self.__k
-            )            
+            pass
+            # dictionary, kmer_counts = generate_repeat_detection_index(
+            #     self.__n,
+            #     self.__sa,
+            #     self.__lcp,
+            #     self.__k
+                
+            # )            
             
-        self.__report_kmers(kmer_counts)
-        
-    def build_contigs():
-        
+        # self.__report_kmers(kmer_counts)
+
 
     def __add_read(self, read: FASTQRecord):
         start_position = self.__n
@@ -131,7 +131,7 @@ class RepeatDetectonIndex:
         self.__reads.append((start_position, read))
         return
 
-    def __report_kmers(self, kmer_counts: Dict[int, int]):
+    def __report_kmers(self, kmer_counts: List[Tuple[int, int]]):
         self.__assert_sa()
         
         pass
