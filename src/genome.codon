@@ -1,9 +1,39 @@
+from read import Read
 
-
-def assemble_contigs():
+def assemble_contigs(
+    reads: List[Read],
+    anchors: List[Tuple[int, int, int]],
     
-    # Step 1: For each candidate anchor string, gather all reads belonging to it
-    for anchor in anchors:
+    # <
+    read_indices_for_kmers,
+    
+    # <anchor_index, read_index>
+    read_indices_for_anchors,
+):
+    
+    # Step 1: For each candidate anchor string:
+    for y, anchor in enumerate(anchors):
+
+        # Step 1b. For all n reads belonging to the anchor, bin them based on jaccard similarity
+        read_indices = read_indices_for_anchors[y]
+
+        bins = []
+        for record in records:
+            matched = False
+
+            # Find the bin that meets the similarity threshold
+            for bin in bins:
+                s = similarity()
+                
+            if not matched:
+                bins.append(...)
+        
+        
+        
+        # Step 1c. For all m bins belonging to this anchor, elect the largest
+        
+        # Step 1d. For the list of reads belonging to the elected contig,
+        #          merge them all to make a consensus contig
         
     
         break

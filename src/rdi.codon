@@ -6,6 +6,7 @@ from index import repeat_detection_index
 from kmer import get_read_indices_for_kmers
 from anchor import get_read_indices_for_anchors
 from read import Read
+from genome import assemble_contigs
 
 DEFAULT_KMER_SIZE = 12
 
@@ -145,7 +146,23 @@ class RepeatDetectonIndex:
             candidate_anchors
         )
         
-        
+        # kmer_indices_total = sum(len(values) for values in read_indices_for_kmers.values())
+        # print(f'kmer_indices_total: {kmer_indices_total}')
+        # anchor_indices_total = sum(len(values) for values in read_indices_for_anchors.values())
+        # print(f'anchor_indices_total: {anchor_indices_total}')
+
+        # Step 3. Produce contigs
+        # contig_bins = []
+        for x, record in enumerate(self.__reads):
+            if x not in read_indices_for_kmers:
+                print(f"Could not find a kmer for read having index {str(x)}")
+                
+        contigs = assemble_contigs(
+            self.__reads,
+            candidate_anchors,
+            read_indices_for_kmers,
+            read_indices_for_anchors
+        )
 
     # Returns a repeat detection index as a dictionary
     def build_repeat_detection_index(self):        

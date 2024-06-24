@@ -1,15 +1,15 @@
-from bio import *
+from typing import Set
 
-def similarity(a, b) -> float:
-    # k = 21
-    a_kmers = set(seq(str(a)).kmers(k=21, step=1))
-    b_kmers = set(seq(str(b)).kmers(k=21, step=1))
+# def _similarity(a, b) -> float:
+#     # k = 21
+#     a_kmers = set(seq(str(a)).kmers(k=21, step=1))
+#     b_kmers = set(seq(str(b)).kmers(k=21, step=1))
 
-    intersection_size = len(a_kmers.intersection(b_kmers))
+#     intersection_size = len(a_kmers.intersection(b_kmers))
 
-    return intersection_size / (len(a_kmers) + len(b_kmers) - intersection_size)
-    # print(set(a_kmers))
-    # b_kmers = seq(b).kmers(k)
+#     return intersection_size / (len(a_kmers) + len(b_kmers) - intersection_size)
+#     # print(set(a_kmers))
+#     # b_kmers = seq(b).kmers(k)
 
 
 # a = 'TTATACTTCGTTCAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTGGTATGCTTCGTTCAGTTACGTATTGCTTACCGGGGTTGCTGAGTGAATATATCGAACAGTCAGGTTAACAGGCTGCGGCATTTTGTCACGCCGGGCTTCGCTCACTGTTGGCTGGGCCGGAGCCACAGACCGCCGTTGAATGGGCGGATGCTAATTACTATCTCCCGAAGAATCCGCATACCAGGAAGGGCGCTGGGAAACACTGCCCTTTCAGCGGGCCATCATGAAGATGCGATGGGCGGCGACACATCCGTGAGGTGAATGTGGTGAAGTCTGCCGTGTCGTTATTCAAAATGCTGCTGGGTGTTTATGCCACACTTTATAGAGCATAAACGGCGCAACACCCTTATCTGGATGCCGACGGATGGTGATGCCGAGAACTTTATGAAAACCCACGTTGAGCCGACTATTCGTGATATTCCGTCGCTGCTGGCGCTGGCCCCGTGGTATGGCAAAAAGCACCGGGATAACACGCTCACCATGAAGCGTTTCACTAATGGGCGTGGCTTCTGGTGCCTGGGCGGTAAAGCGGCAAAAACTACCGTGAAAAGTCGGTGGATGTGGCGGGTTACGCCGTTGAGCTTGCTGCTGATGATGATGTTGAACAGGAGGCTCTCCGACGTTCCTGGGTGACAAAGCGTATTGAGCTCGGTCTGGCCAAAGTCCATCCGTGGCTCACGCCAAAGTGAGAGCACCTGTCAGATTGAGCGTGCAGCCGGTAGATCCCCGCATTTTGCATTTTCATGTTACCCGCATTGCGGGGAGGAGCAGTATCTTAAATTTGGCGACAAAGAGACGCCGTTTGGCCTCAAATGGACGCCGGATGACCCCTCCAGCGTGTTTTATCTCTGCGAGCATAATGCCTGCGTCATCCGCCAACAGAGCCTGGACTTTACTGATGCCCGTTATATCTGCGAAAAGGCAGGATCTGGACCCGTGATGGCATTCTCTGGTTTTCGTCATCCGGTGAGAGCAAGCCACGTAACCC'
@@ -18,3 +18,18 @@ def similarity(a, b) -> float:
 
 # x = similarity(b, c)
 # print(str(x))
+
+def set_from_kmers(xs):
+    
+    pass
+
+def similarity(a: Set[str], b: Set[str]):
+    intersection_size = len(a.intersection(b))
+    return intersection_size / (len(a) + len(b) - intersection_size)
+
+def find_largest_collection(records):
+    
+            
+            
+    
+    pass

@@ -23,17 +23,18 @@ def get_read_indices_for_anchors(
         num_anchors = len(anchors)
         print(f"Aggregating read indices for {num_anchors} anchors...")
 
-        # Dictionary storing read indices for anchors. The key is the index of
-        # the read in the given list of reads, and the value is list of
-        # indices in the array of anchors
+        # Dictionary storing read indices for anchors. The key is the index in
+        # the array of anchors and the value is the index of the read in the
+        # given list of reads.
         read_anchor_indices = Dict[int, List[int]]()
         
         progress = tqdm.tqdm(total=num_anchors, smoothing=0)
         
         # TODO this loop could be unnested
-        for x, (i, _l, r) in enumerate(anchors):
+        for y, (i, _l, r) in enumerate(anchors):
             # Iterate over all positions for a given anchor of length l
             ps = [int(p) for p in sa[i:i+r]]
+            read_anchor_indices[y] = []
             for p in ps:
                 # Perform a binary search on the read data
                 low = 0
@@ -45,9 +46,7 @@ def get_read_indices_for_anchors(
 
                     if p >= pivot.position:
                         if p + k <= pivot.position + len(pivot.record.seq):
-                            if mid not in read_anchor_indices:
-                                read_anchor_indices[mid] = []
-                            read_anchor_indices[mid].append(x)
+                            read_anchor_indices[y].append(mid)
                             break
                         else:
                             low = mid + 1
@@ -56,3 +55,4 @@ def get_read_indices_for_anchors(
             progress.update(1)
 
         progress.close()
+        return read_anchor_indices

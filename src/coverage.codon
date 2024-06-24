@@ -12,9 +12,6 @@ def main():
     parser.add_argument('file_path', help='Path to your sequencing data file')
     parser.add_argument('--reference', required=True, help='The reference genome')
 
-    except:
-        return 0
-
     try:
         args = parser.parse_args(system_args)
     except:

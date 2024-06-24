@@ -45,9 +45,10 @@ def get_read_indices_for_kmers(
         progress = tqdm.tqdm(total=num_kmers, smoothing=0)
         
         # TODO this loop could be unnested
-        for x, (i, r) in enumerate(kmer_counts):
+        for y, (i, r) in enumerate(kmer_counts):
             # Iterate over all positions for a given kmer of length k
             ps = [int(p) for p in sa[i:i+r]]
+            read_kmer_indices[y] = []
             for p in ps:
                 # Perform a binary search on the read data
                 low = 0
@@ -59,9 +60,7 @@ def get_read_indices_for_kmers(
 
                     if p >= pivot.position:
                         if p + k <= pivot.position + len(pivot.record.seq):
-                            if mid not in read_kmer_indices:
-                                read_kmer_indices[mid] = []
-                            read_kmer_indices[mid].append(x)
+                            read_kmer_indices[y].append(mid)
                             break
                         else:
                             low = mid + 1
@@ -70,3 +69,4 @@ def get_read_indices_for_kmers(
             progress.update(1)
 
         progress.close()
+        return read_kmer_indices
