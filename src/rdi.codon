@@ -5,7 +5,7 @@ from lcp import build_lcp_array
 from index import repeat_detection_index
 from kmer import get_read_indices_for_kmers
 from anchor import get_read_indices_for_anchors
-from read import Read
+from tuples import Read
 from genome import assemble_contigs
 
 DEFAULT_KMER_SIZE = 12

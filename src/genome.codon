@@ -1,4 +1,4 @@
-from read import Read
+from tuples import Read
 
 def assemble_contigs(
     reads: List[Read],
