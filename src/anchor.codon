@@ -1,4 +1,4 @@
-from tuples import Read
+from tuples import Read, AnchorReadMap, AnchorIndex, ReadIndex
 from python import tqdm
 
 
@@ -18,15 +18,12 @@ def get_read_indices_for_anchors(
     # is the index in the suffix array table, the second value is the length of
     # the anchor, and the third value is the number of occurrences.
     anchors: List[Tuple[int, int, int]]
-):
+) -> AnchorReadMap:
 
         num_anchors = len(anchors)
         print(f"Aggregating read indices for {num_anchors} anchors...")
 
-        # Dictionary storing read indices for anchors. The key is the index in
-        # the array of anchors and the value is the index of the read in the
-        # given list of reads.
-        read_anchor_indices = Dict[int, List[int]]()
+        read_anchor_indices: AnchorReadMap = Dict[AnchorIndex, List[ReadIndex]]()
         
         progress = tqdm.tqdm(total=num_anchors, smoothing=0)
         

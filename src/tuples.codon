@@ -4,3 +4,22 @@ from bio import FASTQRecord
 class Read:
     position: int
     record: FASTQRecord
+
+@tuple
+class AnchorRecord:
+    i: int
+    l: int
+    r: int
+
+@tuple
+class KmerRecord:
+    i: int
+    r: int
+
+AnchorIndex = int
+ReadIndex = int
+KmerIndex = int
+
+ReadKmerMap = Dict[ReadIndex, List[KmerIndex]]
+
+AnchorReadMap = Dict[AnchorIndex, List[ReadIndex]]

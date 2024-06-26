@@ -1,14 +1,14 @@
-from tuples import Read
+from tuples import Read, ReadKmerMap, ReadIndex, KmerIndex, KmerRecord
 from python import tqdm
 
 def get_kmer_rdi_ext(k: int):
     return f'.{k}mer.rdi'
 
 # TODO refactor these
-# def write_kmers(k, kmer_counts, file_path):
+# def write_kmers(k, kmer_records, file_path):
 #     print(f'Writing kmer counts to disk... ')
 #     archive = RdiArchive[Dict[int, int]]()
-#     archive.write(kmer_counts, file_path, get_kmer_rdi_ext(k))
+#     archive.write(kmer_records, file_path, get_kmer_rdi_ext(k))
     
 # def load_kmers(k, file_path):
 #     print(f'Loading kmer counts from disk... ')
@@ -28,27 +28,25 @@ def get_read_indices_for_kmers(
     # k: The length of the kmers.
     k: int,
 
-    # kmer_counts: A list of tuples representing kmer counts. The first value
-    # is the index in the suffix array table and the second value is the
-    # number of occurrences for that kmer.
-    kmer_counts: List[Tuple[int, int]]
+    # kmer_records: A list of tuples representing kmer counts.
+    kmer_records: List[KmerRecord]
 ):
 
-        num_kmers = len(kmer_counts)
+        num_kmers = len(kmer_records)
         print(f"Aggregating read indices for {num_kmers} kmers...")
 
         # Dictionary storing read indices for kmers. The key is the index of
         # the read in the given list of reads, and the value is list of
         # indices in the array of kmers
-        read_kmer_indices = Dict[int, List[int]]()
+        read_kmer_indices: ReadKmerMap = Dict[ReadIndex, List[KmerIndex]]()
         
         progress = tqdm.tqdm(total=num_kmers, smoothing=0)
         
         # TODO this loop could be unnested
-        for y, (i, r) in enumerate(kmer_counts):
+        for z, (i, r) in enumerate(kmer_records):
             # Iterate over all positions for a given kmer of length k
             ps = [int(p) for p in sa[i:i+r]]
-            read_kmer_indices[y] = []
+            read_kmer_indices[z] = []
             for p in ps:
                 # Perform a binary search on the read data
                 low = 0
@@ -60,7 +58,7 @@ def get_read_indices_for_kmers(
 
                     if p >= pivot.position:
                         if p + k <= pivot.position + len(pivot.record.seq):
-                            read_kmer_indices[y].append(mid)
+                            read_kmer_indices[z].append(mid)
                             break
                         else:
                             low = mid + 1
@@ -70,3 +68,11 @@ def get_read_indices_for_kmers(
 
         progress.close()
         return read_kmer_indices
+
+# TODO use list compregension
+def get_string_set_from_kmer(kmer_records: List[KmerRecord]):
+    s = Set[str]()
+    for record in kmer_records:
+        for z in range(record.r):
+            s.add(f'{z}:{record.i}')
+    return s

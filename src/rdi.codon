@@ -5,7 +5,7 @@ from lcp import build_lcp_array
 from index import repeat_detection_index
 from kmer import get_read_indices_for_kmers
 from anchor import get_read_indices_for_anchors
-from tuples import Read
+from tuples import Read, KmerRecord
 from genome import assemble_contigs
 
 DEFAULT_KMER_SIZE = 12
@@ -106,7 +106,7 @@ class RepeatDetectonIndex:
         # A list representing read kmers. Each kmer is represented by a tuple
         # whereby the first value is the index in the suffix array, and the
         # second value is the number of its occurrences.
-        kmer_counts: List[Tuple[int, int]] = []
+        kmer_counts: List[KmerRecord] = []
 
         def _report(records: List[Tuple[int, int, int]]):
             for record in records:

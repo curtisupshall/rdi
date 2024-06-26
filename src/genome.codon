@@ -1,28 +1,33 @@
-from tuples import Read
+from tuples import Read, AnchorReadMap, ReadIndex
+
 
 def assemble_contigs(
     reads: List[Read],
     anchors: List[Tuple[int, int, int]],
+    kmer_records: List[KmerRecord],
     
-    # <
-    read_indices_for_kmers,
+    read_indices_for_kmers: KmerReadMap,
     
-    # <anchor_index, read_index>
-    read_indices_for_anchors,
+    read_indices_for_anchors: AnchorReadMap,
 ):
     
+    # TODO ??????
+    read_kmer_sets = [get_string_set_from_kmer(read_indices_for_kmers[x]) for x in reads]
+
     # Step 1: For each candidate anchor string:
     for y, anchor in enumerate(anchors):
 
-        # Step 1b. For all n reads belonging to the anchor, bin them based on jaccard similarity
-        read_indices = read_indices_for_anchors[y]
+        # For all reads belonging to the anchor, bin them based on jaccard similarity
+        read_indices: List[ReadIndex] = read_indices_for_anchors[y]
 
         bins = []
-        for record in records:
+        for x in read_indices:
             matched = False
+            read = reads[x]
 
             # Find the bin that meets the similarity threshold
             for bin in bins:
+                
                 s = similarity()
                 
             if not matched:
