@@ -13,6 +13,9 @@ libdivsufsort:
 clean:
 	rm -rf rdi data/*.rdi .rdilist
 
+test_minimap:
+	./extern/minimap2/minimap2 -x ava-pb -t8 data/SRR15652545.fastq data/SRR15652545.fastq | gzip -1 > reads.paf.gz
+
 rdi:
 	codon build -release -plugin seq src/rdi.codon -o rdi
 

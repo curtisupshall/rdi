@@ -81,6 +81,11 @@ def write_contigs(contigs, file_path):
     print('Saving contigs to disk...')
     archive = RdiArchive[List[str]]()
     archive.write(contigs, file_path, CONTIGS_RDI_EXT)
+    
+# Loads a set of contigs from disk
+def load_contigs(file_path) -> List[str]:
+    archive = RdiArchive[List[str]]()
+    return archive.load(file_path, CONTIGS_RDI_EXT)
 
 def load_or_generate_candidate_anchors(Text: str, coverage: int, lmin: int, lmax: int, a: int, file_path: str, overwrite: bool = False):
     if not overwrite:
