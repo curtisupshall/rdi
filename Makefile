@@ -14,7 +14,10 @@ clean:
 	rm -rf rdi data/*.rdi .rdilist
 
 test_minimap:
-	./extern/minimap2/minimap2 -x ava-pb -t8 data/SRR15652545.fastq data/SRR15652545.fastq | gzip -1 > reads.paf.gz
+	./extern/minimap2/minimap2 -x ava-pb -t8 data/contigs.fa data/contigs.fa | gzip -1 > contigs.paf.gz
+
+test_miniasm:
+	./extern/miniasm/miniasm contigs.paf.gz > contigs.gfa
 
 rdi:
 	codon build -release -plugin seq src/rdi.codon -o rdi
